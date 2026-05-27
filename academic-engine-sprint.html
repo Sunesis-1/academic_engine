@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine — Writing Sprint Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808; --deep: #0e0e0e; --card: #141414; --border: #222; --border2: #2a2a2a;
+      --gold: #c9a84c; --gold-light: #e8c87a; --gold-dim: rgba(201,168,76,0.12);
+      --cream: #f5f0e8; --muted: #555; --muted2: #777; --text: #d0cbc3;
+      --green: #4caf7d; --blue: #5c8fe0; --red: #e05c5c; --purple: #9c6ee0;
+    }
+    html, body { height: 100%; }
+    body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* AMBIENT */
+    .ambient { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .ambient-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(201,168,76,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.025) 1px, transparent 1px); background-size: 80px 80px; mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 100%); }
+    .ambient-glow { position: absolute; top: -20%; left: 50%; transform: translateX(-50%); width: 800px; height: 500px; background: radial-gradient(ellipse, rgba(201,168,76,0.04) 0%, transparent 70%); transition: opacity 1s ease; opacity: 0.3; }
+    .ambient-glow.active { opacity: 1; }
+
+    /* ══ PRE-SESSION SETUP SCREEN ══ */
+    .setup-screen { position: fixed; inset: 0; background: var(--black); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .setup-screen.hidden { display: none; }
+    .setup-card { width: 100%; max-width: 600px; background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); animation: fadeUp 0.5s ease; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+    .setup-header { padding: 1.8rem 2rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .setup-eyebrow { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.5rem; }
+    .setup-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+    .setup-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--cream); }
+    .setup-body { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.2rem; }
+    .setup-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; display: block; }
+    .setup-input, .setup-select { width: 100%; background: var(--deep); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.8rem 1rem; outline: none; transition: border-color 0.2s; appearance: none; }
+    .setup-input:focus, .setup-select:focus { border-color: var(--gold); }
+    .setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    /* section chips */
+    .section-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .section-chip { font-family: 'DM Mono', monospace; font-size: 0.58rem; padding: 0.4rem 0.8rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.15s; }
+    .section-chip:hover { border-color: var(--gold); color: var(--gold); }
+    .section-chip.selected { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+    /* session mode tiles */
+    .mode-tiles { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); }
+    .mode-tile { background: var(--deep); padding: 0.9rem; text-align: center; cursor: pointer; transition: all 0.15s; border: 2px solid transparent; }
+    .mode-tile:hover { background: var(--card); }
+    .mode-tile.selected { background: var(--gold-dim); border-color: var(--gold); }
+    .mode-tile-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--cream); font-weight: 700; }
+    .mode-tile.selected .mode-tile-name { color: var(--gold); }
+    .mode-tile-desc { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.3rem; }
+    /* scheduled rooms */
+    .scheduled-rooms { display: flex; flex-direction: column; gap: 0.5rem; }
+    .room-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0.9rem; background: var(--deep); border: 1px solid var(--border); cursor: pointer; transition: border-color 0.15s; }
+    .room-item:hover { border-color: var(--gold); }
+    .room-item.active-now { border-color: rgba(76,175,125,0.4); }
+    .room-time { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted2); flex-shrink: 0; width: 60px; }
+    .room-time.now { color: var(--green); }
+    .room-info { flex: 1; }
+    .room-name { font-size: 0.8rem; color: var(--cream); }
+    .room-scholars { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); margin-top: 0.15rem; }
+    .room-join { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.6rem; border: 1px solid var(--border2); color: var(--muted); transition: all 0.15s; }
+    .room-join.live { border-color: rgba(76,175,125,0.4); color: var(--green); }
+    .setup-footer { padding: 1.2rem 2rem; border-top: 1px solid var(--border); display: flex; gap: 0.8rem; align-items: center; justify-content: space-between; }
+    .setup-solo-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.8rem 1.5rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .setup-solo-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .setup-start-btn { font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 0.9rem 2.5rem; background: var(--gold); border: none; color: var(--black); cursor: pointer; transition: all 0.2s; }
+    .setup-start-btn:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+    /* ══ MAIN APP ══ */
+    .app-shell { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; z-index: 1; }
+
+    /* TOPBAR */
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1.5rem; border-bottom: 1px solid var(--border); background: rgba(8,8,8,0.92); backdrop-filter: blur(12px); flex-shrink: 0; gap: 1rem; }
+    .topbar-logo { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); text-decoration: none; white-space: nowrap; }
+    .topbar-center { display: flex; align-items: center; gap: 1rem; }
+    .session-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700; color: var(--cream); }
+    .session-phase { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+    /* DND badge */
+    .dnd-badge { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.3rem 0.7rem; border: 1px solid rgba(76,175,125,0.3); background: rgba(76,175,125,0.08); color: var(--green); }
+    .dnd-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    .topbar-right { display: flex; align-items: center; gap: 0.7rem; }
+    .tb-btn { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.4rem 0.8rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .tb-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .tb-btn.danger:hover { border-color: var(--red); color: var(--red); }
+    .live-row { display: flex; align-items: center; gap: 0.5rem; font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--muted2); }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: livePulse 2s infinite; }
+    @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(76,175,125,0.4);}50%{box-shadow:0 0 0 4px rgba(76,175,125,0);} }
+    .s-avatars { display: flex; }
+    .s-av { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--black); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 0.55rem; font-weight: 700; color: white; margin-left: -5px; }
+    .s-av:first-child { margin-left: 0; }
+
+    /* SPRINT LAYOUT */
+    .sprint-layout { flex: 1; display: grid; grid-template-columns: 260px 1fr 260px; min-height: 0; }
+
+    /* LEFT PANEL */
+    .left-panel { border-right: 1px solid var(--border); background: var(--deep); display: flex; flex-direction: column; overflow-y: auto; }
+    .p-section { padding: 1rem 1.1rem; border-bottom: 1px solid var(--border); }
+    .p-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.7rem; }
+
+    /* TIMER */
+    .timer-block { text-align: center; padding: 1.3rem 1rem 1rem; border-bottom: 1px solid var(--border); background: var(--card); }
+    .phase-tag { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.7rem; }
+    .phase-tag.work { color: var(--gold); }
+    .phase-tag.break { color: var(--green); }
+    .timer-ring { position: relative; width: 130px; height: 130px; margin: 0 auto 0.9rem; }
+    .timer-ring svg { transform: rotate(-90deg); }
+    .timer-track { fill: none; stroke: var(--border2); }
+    .timer-arc { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.5s; }
+    .timer-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .t-time { font-family: 'DM Mono', monospace; font-size: 1.7rem; color: var(--cream); letter-spacing: 0.05em; line-height: 1; }
+    .t-sub { font-family: 'DM Mono', monospace; font-size: 0.48rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 0.25rem; }
+    .timer-ctrls { display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 0.8rem; }
+    .t-btn { flex: 1; padding: 0.55rem 0.4rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .t-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .t-btn.go { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .t-btn.go:hover { background: var(--gold-light); }
+    .s-dots { display: flex; gap: 0.35rem; justify-content: center; }
+    .s-dot { width: 7px; height: 7px; border-radius: 2px; background: var(--border2); transition: all 0.3s; }
+    .s-dot.done { background: var(--gold); }
+    .s-dot.current { background: var(--gold); animation: blink 1.5s infinite; }
+    @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+
+    /* CHAPTER TARGET */
+    .target-box { background: var(--card); border: 1px solid var(--border); border-left: 2px solid var(--gold); padding: 0.8rem 0.9rem; }
+    .target-chapter { font-size: 0.78rem; color: var(--cream); font-weight: 500; }
+    .target-section { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; color: var(--gold); margin-top: 0.15rem; }
+    .target-wc { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--green); margin-top: 0.5rem; }
+
+    /* PROMPT — section-adaptive */
+    .prompt-box { background: var(--deep); border: 1px solid var(--border); border-left: 2px solid var(--purple); padding: 0.8rem 0.9rem; }
+    .prompt-tag { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--purple); margin-bottom: 0.4rem; }
+    .prompt-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; color: var(--text); line-height: 1.6; }
+    .prompt-next { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); cursor: pointer; margin-top: 0.5rem; text-align: right; transition: color 0.15s; }
+    .prompt-next:hover { color: var(--gold); }
+
+    /* SCHOLARS */
+    .scholar-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .sch-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; background: var(--card); border: 1px solid var(--border); }
+    .sch-row.you { border-color: rgba(201,168,76,0.3); background: var(--gold-dim); }
+    .sch-av { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 0.68rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .sch-name { font-size: 0.75rem; color: var(--cream); flex: 1; }
+    .sch-st { font-family: 'DM Mono', monospace; font-size: 0.48rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .sch-st.writing { color: var(--gold); }
+    .sch-st.onbreak { color: var(--green); }
+    .sch-st.joining { color: var(--blue); }
+
+    /* ══ WRITING AREA ══ */
+    .writing-area { display: flex; flex-direction: column; background: var(--black); position: relative; }
+
+    /* BREAK OVERLAY */
+    .break-overlay { position: absolute; inset: 0; background: rgba(8,8,8,0.94); z-index: 20; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; padding: 2rem; }
+    .break-overlay.on { display: flex; }
+    .break-h { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; color: var(--green); }
+    .break-sub { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted2); }
+    .break-clock { font-family: 'DM Mono', monospace; font-size: 3rem; color: var(--green); letter-spacing: 0.05em; }
+    /* REFLECTION CAPTURE */
+    .reflect-box { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--green); padding: 1.2rem; }
+    .reflect-label { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 0.5rem; }
+    .reflect-prompt { font-size: 0.82rem; color: var(--text); line-height: 1.6; margin-bottom: 0.8rem; font-style: italic; }
+    .reflect-input { width: 100%; background: var(--deep); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.7rem 0.9rem; outline: none; min-height: 70px; resize: none; transition: border-color 0.2s; }
+    .reflect-input:focus { border-color: var(--green); }
+    .reflect-save { margin-top: 0.6rem; width: 100%; font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem; background: rgba(76,175,125,0.15); border: 1px solid rgba(76,175,125,0.3); color: var(--green); cursor: pointer; transition: all 0.2s; }
+    .reflect-save:hover { background: rgba(76,175,125,0.25); }
+    .break-skip { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.7rem 2rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .break-skip:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* WORD BAR */
+    .wbar { padding: 0.55rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; background: rgba(8,8,8,0.6); flex-shrink: 0; }
+    .wstat { display: flex; align-items: baseline; gap: 0.35rem; }
+    .wlabel { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .wval { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--gold); }
+    .wdiv { width: 1px; height: 18px; background: var(--border2); }
+    .wtrack { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+    .wfill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); border-radius: 2px; transition: width 0.3s ease; }
+    .wtarget { font-family: 'DM Mono', monospace; font-size: 0.5rem; color: var(--muted); white-space: nowrap; }
+    /* milestone linked indicator */
+    .milestone-sync { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); }
+    .ms-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+
+    /* TOOLBAR */
+    .toolbar { padding: 0.45rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0; background: rgba(8,8,8,0.4); flex-wrap: wrap; }
+    .t-tool { font-family: 'DM Mono', monospace; font-size: 0.62rem; padding: 0.28rem 0.55rem; border: 1px solid transparent; background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.15s; border-radius: 2px; }
+    .t-tool:hover { background: var(--border2); color: var(--cream); }
+    .t-divider { width: 1px; height: 16px; background: var(--border2); margin: 0 0.15rem; }
+    .focus-btn { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.3rem 0.7rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .focus-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .focus-btn.on { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+    /* EDITOR */
+    .editor-wrap { flex: 1; overflow-y: auto; padding: 2.5rem 3.5rem; }
+    .editor-wrap.focus { padding: 3rem 18%; background: var(--black); }
+    .editor-wrap::-webkit-scrollbar { width: 3px; }
+    .editor-wrap::-webkit-scrollbar-thumb { background: var(--border2); }
+    .ed-section-tag { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); opacity: 0.7; margin-bottom: 0.4rem; }
+    .ed-chapter-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--cream); margin-bottom: 0.25rem; }
+    .ed-divider { height: 1px; background: var(--border); margin: 1.2rem 0; }
+    #editor { min-height: 380px; outline: none; font-size: 0.98rem; line-height: 1.9; color: var(--text); caret-color: var(--gold); font-family: 'DM Sans', sans-serif; font-weight: 300; }
+    #editor:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; font-style: italic; }
+    #editor p { margin-bottom: 0.9rem; }
+    #editor h2 { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--cream); margin: 1.2rem 0 0.4rem; }
+
+    /* TYPING INDICATOR */
+    .typing-ind { position: absolute; bottom: 0.8rem; left: 50%; transform: translateX(-50%); font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); background: rgba(8,8,8,0.9); border: 1px solid var(--border); padding: 0.25rem 0.7rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 5; }
+    .typing-ind.on { opacity: 1; }
+
+    /* RIGHT PANEL */
+    .right-panel { border-left: 1px solid var(--border); background: var(--deep); display: flex; flex-direction: column; overflow-y: auto; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); }
+    .st-box { background: var(--card); padding: 0.85rem 1rem; }
+    .st-val { font-family: 'Playfair Display', serif; font-size: 1.35rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .st-label { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.2rem; }
+
+    /* SPRINT LOG */
+    .sprint-log { display: flex; flex-direction: column; gap: 0.4rem; }
+    .sl-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.55rem 0.8rem; background: var(--card); border: 1px solid var(--border); }
+    .sl-num { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--gold); flex-shrink: 0; }
+    .sl-info { flex: 1; }
+    .sl-words { font-size: 0.75rem; color: var(--cream); }
+    .sl-time { font-family: 'DM Mono', monospace; font-size: 0.52rem; color: var(--muted); }
+    .sl-bar { height: 2px; background: var(--border2); margin-top: 0.3rem; border-radius: 1px; overflow: hidden; }
+    .sl-fill { height: 100%; background: var(--gold); border-radius: 1px; }
+
+    /* REFLECTIONS SAVED */
+    .reflect-saved { display: flex; flex-direction: column; gap: 0.4rem; }
+    .rs-item { padding: 0.6rem 0.8rem; background: var(--card); border: 1px solid var(--border); border-left: 2px solid var(--green); }
+    .rs-tag { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 0.25rem; }
+    .rs-text { font-size: 0.75rem; color: var(--text); line-height: 1.5; font-style: italic; }
+
+    /* CHAT */
+    .chat-wrap { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .chat-msgs { flex: 1; overflow-y: auto; padding: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; max-height: 180px; }
+    .chat-msgs::-webkit-scrollbar { width: 2px; }
+    .chat-msgs::-webkit-scrollbar-thumb { background: var(--border2); }
+    .c-msg { padding: 0.45rem 0.65rem; background: var(--card); border: 1px solid var(--border); }
+    .c-msg.you { border-color: rgba(201,168,76,0.2); background: var(--gold-dim); }
+    .c-msg.sys { border-color: rgba(76,175,125,0.2); background: rgba(76,175,125,0.05); }
+    .c-author { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.15rem; }
+    .c-author.you { color: var(--gold); }
+    .c-author.sys { color: var(--green); }
+    .c-text { font-size: 0.73rem; color: var(--text); line-height: 1.4; }
+    /* quick reactions */
+    .reactions-bar { display: flex; gap: 0.4rem; padding: 0.5rem 0.6rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
+    .react-btn { font-size: 0.9rem; background: transparent; border: 1px solid var(--border2); padding: 0.2rem 0.5rem; cursor: pointer; transition: all 0.15s; border-radius: 2px; }
+    .react-btn:hover { background: var(--border2); transform: scale(1.1); }
+    .chat-input-row { display: flex; border-top: 1px solid var(--border); }
+    .c-input { flex: 1; background: var(--card); border: none; color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.78rem; padding: 0.55rem 0.7rem; outline: none; }
+    .c-send { padding: 0 0.8rem; background: var(--gold); border: none; color: var(--black); font-family: 'DM Mono', monospace; font-size: 0.58rem; cursor: pointer; transition: background 0.2s; }
+    .c-send:hover { background: var(--gold-light); }
+
+    /* TOAST */
+    .toast { position: fixed; top: 4.5rem; right: 1.5rem; z-index: 100; background: var(--card); border: 1px solid var(--gold); border-left: 3px solid var(--gold); padding: 0.8rem 1.1rem; max-width: 270px; transform: translateX(120%); opacity: 0; transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+    .toast.on { transform: translateX(0); opacity: 1; }
+    .toast-t { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.25rem; }
+    .toast-b { font-size: 0.75rem; color: var(--text); line-height: 1.4; }
+
+    /* MILESTONE SYNC TOAST */
+    .ms-toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); opacity: 0; z-index: 100; background: var(--card); border: 1px solid rgba(76,175,125,0.4); border-left: 3px solid var(--green); padding: 0.8rem 1.4rem; display: flex; align-items: center; gap: 0.8rem; transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+    .ms-toast.on { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .ms-toast-text { font-size: 0.78rem; color: var(--cream); }
+    .ms-toast-text strong { color: var(--green); font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; display: block; }
+
+    /* END SCREEN */
+    .end-screen { position: fixed; inset: 0; background: rgba(8,8,8,0.97); z-index: 400; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 1.8rem; padding: 2rem; }
+    .end-screen.on { display: flex; }
+    .end-tag { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); }
+    .end-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem,5vw,3.5rem); font-weight: 900; color: var(--cream); text-align: center; }
+    .end-title em { font-style: italic; color: var(--gold); }
+    .end-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); max-width: 560px; width: 100%; }
+    .end-st { background: var(--card); padding: 1.1rem; text-align: center; }
+    .end-st-val { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+    .end-st-label { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.25rem; }
+    .end-reflections { width: 100%; max-width: 560px; background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--green); padding: 1.2rem; }
+    .end-reflect-title { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--green); margin-bottom: 0.8rem; }
+    .end-reflect-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .end-reflect-item { font-size: 0.8rem; color: var(--text); line-height: 1.5; font-style: italic; padding: 0.5rem 0.8rem; background: var(--deep); border-left: 2px solid var(--green); }
+    .end-actions { display: flex; gap: 0.8rem; }
+    .end-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.85rem 2rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .end-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .end-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .end-btn.primary:hover { background: var(--gold-light); }
+
+    @media(max-width:1100px){ .sprint-layout{grid-template-columns:220px 1fr 220px;} }
+    @media(max-width:900px){ .sprint-layout{grid-template-columns:1fr;} .left-panel,.right-panel{display:none;} .editor-wrap{padding:2rem 1.5rem;} .end-stats{grid-template-columns:repeat(2,1fr);} .setup-row{grid-template-columns:1fr;} }
+    @media(max-width:600px){ .topbar{padding:0.7rem 1rem;flex-wrap:wrap;gap:0.5rem;} .wbar{padding:0.5rem 1rem;} .editor-wrap{padding:1.5rem 1rem;} .mode-tiles{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+
+<div class="ambient"><div class="ambient-grid"></div><div class="ambient-glow" id="glow"></div></div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- PRE-SESSION SETUP SCREEN                   -->
+<!-- ══════════════════════════════════════════ -->
+<div class="setup-screen" id="setupScreen">
+  <div class="setup-card">
+    <div class="setup-header">
+      <div class="setup-eyebrow">Writing Sprint Room</div>
+      <div class="setup-title">Set your intention<br/>before you begin.</div>
+    </div>
+    <div class="setup-body">
+
+      <!-- Chapter / Section -->
+      <div>
+        <label class="setup-label">What are you writing today?</label>
+        <select class="setup-select" id="setupChapter" onchange="updatePrompts()">
+          <option value="lit">Chapter 2 — Literature Review</option>
+          <option value="method">Chapter 3 — Methodology</option>
+          <option value="results">Chapter 4 — Results & Analysis</option>
+          <option value="discussion">Chapter 5 — Discussion</option>
+          <option value="abstract">Conference Abstract</option>
+          <option value="proposal">Research Proposal</option>
+        </select>
+      </div>
+
+      <!-- Section chips -->
+      <div>
+        <label class="setup-label">Specific Section</label>
+        <div class="section-chips" id="sectionChips">
+          <div class="section-chip selected" onclick="selectChip(this)">2.1 — Background</div>
+          <div class="section-chip" onclick="selectChip(this)">2.2 — Research Gap</div>
+          <div class="section-chip" onclick="selectChip(this)">2.3 — Theoretical Framework</div>
+          <div class="section-chip" onclick="selectChip(this)">2.4 — Summary</div>
+          <div class="section-chip" onclick="selectChip(this)">+ New section</div>
+        </div>
+      </div>
+
+      <!-- Word target + session mode -->
+      <div class="setup-row">
+        <div>
+          <label class="setup-label">Word Count Target</label>
+          <input class="setup-input" type="number" id="setupWordTarget" value="500" min="50" max="5000" placeholder="e.g. 500"/>
+        </div>
+        <div>
+          <label class="setup-label">Session Mode</label>
+          <div class="mode-tiles">
+            <div class="mode-tile selected" onclick="selectMode(this,'50/10')">
+              <div class="mode-tile-name">Pomodoro</div>
+              <div class="mode-tile-desc">50 min · 10 break</div>
+            </div>
+            <div class="mode-tile" onclick="selectMode(this,'90')">
+              <div class="mode-tile-name">Deep Work</div>
+              <div class="mode-tile-desc">90 min · no break</div>
+            </div>
+            <div class="mode-tile" onclick="selectMode(this,'free')">
+              <div class="mode-tile-name">Free</div>
+              <div class="mode-tile-desc">No timer</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scheduled rooms -->
+      <div>
+        <label class="setup-label">Scheduled Co-Working Rooms</label>
+        <div class="scheduled-rooms">
+          <div class="room-item active-now" onclick="joinScheduledRoom(this)">
+            <div class="room-time now">Now</div>
+            <div class="room-info">
+              <div class="room-name">Friday Morning Sprint</div>
+              <div class="room-scholars">Kwame, Efia, Sena + 2 others already writing</div>
+            </div>
+            <div class="room-join live">Join Live</div>
+          </div>
+          <div class="room-item" onclick="joinScheduledRoom(this)">
+            <div class="room-time">2:00 PM</div>
+            <div class="room-info">
+              <div class="room-name">Afternoon Focus Block</div>
+              <div class="room-scholars">Ama, Kofi · 2 confirmed</div>
+            </div>
+            <div class="room-join">RSVP</div>
+          </div>
+          <div class="room-item" onclick="joinScheduledRoom(this)">
+            <div class="room-time">Sat 9am</div>
+            <div class="room-info">
+              <div class="room-name">Weekend Shut Up & Write</div>
+              <div class="room-scholars">Open to all · 8 confirmed</div>
+            </div>
+            <div class="room-join">RSVP</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <div class="setup-footer">
+      <button class="setup-solo-btn" onclick="startSession(true)">Solo Session →</button>
+      <button class="setup-start-btn" onclick="startSession(false)">Join Live Room & Start →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- MAIN APP SHELL                             -->
+<!-- ══════════════════════════════════════════ -->
+<div class="app-shell" id="appShell" style="display:none;">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <a href="academic-engine-dashboard.html" class="topbar-logo">← Dashboard</a>
+    <div class="topbar-center">
+      <div>
+        <div class="session-name" id="sessionTitle">Friday Morning Sprint</div>
+        <div class="session-phase" id="sessionPhase">Chapter 2 · Section 2.2 — Research Gap</div>
+      </div>
+      <div class="dnd-badge"><div class="dnd-dot"></div>Notifications paused</div>
+    </div>
+    <div class="topbar-right">
+      <div class="live-row">
+        <div class="live-dot"></div>
+        <div class="s-avatars">
+          <div class="s-av" style="background:linear-gradient(135deg,var(--gold),#8a6e2f);">A</div>
+          <div class="s-av" style="background:linear-gradient(135deg,#5c8fe0,#2d5aa8);">K</div>
+          <div class="s-av" style="background:linear-gradient(135deg,#4caf7d,#267a52);">E</div>
+          <div class="s-av" style="background:var(--muted);">+2</div>
+        </div>
+        <span id="liveCount">5 live</span>
+      </div>
+      <button class="tb-btn" onclick="toggleFocus()">Focus</button>
+      <button class="tb-btn danger" onclick="confirmEnd()">End</button>
+    </div>
+  </div>
+
+  <!-- SPRINT LAYOUT -->
+  <div class="sprint-layout">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+
+      <!-- TIMER -->
+      <div class="timer-block">
+        <div class="phase-tag work" id="phaseTag">Deep Work</div>
+        <div class="timer-ring">
+          <svg width="130" height="130" viewBox="0 0 130 130">
+            <circle class="timer-track" cx="65" cy="65" r="54" stroke-width="5"/>
+            <circle class="timer-arc" id="arc" cx="65" cy="65" r="54" stroke="#c9a84c" stroke-width="5" stroke-dasharray="339.3" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-center">
+            <div class="t-time" id="tDisplay">50:00</div>
+            <div class="t-sub" id="tSub">Sprint 1 of 4</div>
+          </div>
+        </div>
+        <div class="timer-ctrls">
+          <button class="t-btn go" id="goBtn" onclick="toggleTimer()">▶ Start</button>
+          <button class="t-btn" onclick="resetTimer()">↺</button>
+        </div>
+        <div class="s-dots">
+          <div class="s-dot current" id="d0"></div>
+          <div class="s-dot" id="d1"></div>
+          <div class="s-dot" id="d2"></div>
+          <div class="s-dot" id="d3"></div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.48rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-top:0.6rem;text-align:center;">50 write · 10 break · ×4</div>
+      </div>
+
+      <!-- TARGET -->
+      <div class="p-section">
+        <div class="p-label">Writing Target</div>
+        <div class="target-box">
+          <div class="target-chapter" id="targetChapter">Ch. 2 — Literature Review</div>
+          <div class="target-section" id="targetSection">Section 2.2 · Research Gap Analysis</div>
+          <div class="target-wc" id="targetWC">Target: 500 words</div>
+        </div>
+      </div>
+
+      <!-- ADAPTIVE PROMPT -->
+      <div class="p-section">
+        <div class="p-label">Writing Prompt <span style="color:var(--muted);font-size:0.5rem;">· matched to your section</span></div>
+        <div class="prompt-box">
+          <div class="prompt-tag" id="promptTag">Research Gap Analysis</div>
+          <div class="prompt-text" id="promptText">State the specific gap your research fills in 2–3 sentences. Name the gap precisely — not the topic, the gap. What does existing literature fail to address?</div>
+        </div>
+        <div class="prompt-next" onclick="nextPrompt()">Different prompt →</div>
+      </div>
+
+      <!-- SCHOLARS -->
+      <div class="p-section" style="flex:1;">
+        <div class="p-label">Live in Room</div>
+        <div class="scholar-list">
+          <div class="sch-row you"><div class="sch-av" style="background:linear-gradient(135deg,var(--gold),#8a6e2f);">A</div><div class="sch-name">You</div><div class="sch-st writing" id="yourSt">Writing</div></div>
+          <div class="sch-row"><div class="sch-av" style="background:linear-gradient(135deg,#5c8fe0,#2d5aa8);">K</div><div class="sch-name">Kwame</div><div class="sch-st writing">Writing</div></div>
+          <div class="sch-row"><div class="sch-av" style="background:linear-gradient(135deg,#4caf7d,#267a52);">E</div><div class="sch-name">Efia</div><div class="sch-st onbreak">On break</div></div>
+          <div class="sch-row"><div class="sch-av" style="background:linear-gradient(135deg,#9c6ee0,#5a2da8);">S</div><div class="sch-name">Sena</div><div class="sch-st writing">Writing</div></div>
+          <div class="sch-row"><div class="sch-av" style="background:linear-gradient(135deg,#e09c5c,#a85020);">O</div><div class="sch-name">Ofori</div><div class="sch-st joining">Joining...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WRITING AREA -->
+    <div class="writing-area">
+
+      <!-- BREAK OVERLAY with REFLECTION CAPTURE -->
+      <div class="break-overlay" id="breakOverlay">
+        <div class="break-h">Break Time</div>
+        <div class="break-sub">Step away · breathe · return stronger</div>
+        <div class="break-clock" id="breakClock">10:00</div>
+        <div class="reflect-box">
+          <div class="reflect-label">Sprint Reflection</div>
+          <div class="reflect-prompt" id="reflectPrompt">What's the single most important sentence you wrote in that sprint? Type it below — don't look back.</div>
+          <textarea class="reflect-input" id="reflectInput" placeholder="Type your key sentence or insight here..."></textarea>
+          <button class="reflect-save" onclick="saveReflection()">Save Reflection → Feeds into Writing Workspace</button>
+        </div>
+        <button class="break-skip" onclick="skipBreak()">Skip Break →</button>
+      </div>
+
+      <!-- WORD BAR -->
+      <div class="wbar">
+        <div class="wstat"><div class="wlabel">Sprint</div><div class="wval" id="sprintW">0</div></div>
+        <div class="wdiv"></div>
+        <div class="wstat"><div class="wlabel">Session</div><div class="wval" id="sessionW">218</div></div>
+        <div class="wdiv"></div>
+        <div class="wtrack"><div class="wfill" id="wFill" style="width:44%;"></div></div>
+        <div class="wtarget" id="wTarget">218 / 500 words</div>
+        <div class="wdiv"></div>
+        <div class="milestone-sync"><div class="ms-dot"></div>Milestone synced</div>
+      </div>
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <button class="t-tool" onclick="fmt('bold')"><strong>B</strong></button>
+        <button class="t-tool" onclick="fmt('italic')"><em>I</em></button>
+        <button class="t-tool" onclick="fmt('underline')"><u>U</u></button>
+        <div class="t-divider"></div>
+        <button class="t-tool" onclick="fmt('formatBlock','h2')">H2</button>
+        <button class="t-tool" onclick="fmt('insertUnorderedList')">• List</button>
+        <button class="t-tool" onclick="fmt('insertOrderedList')">1.</button>
+        <div class="t-divider"></div>
+        <button class="t-tool" onclick="ins('[Ref: Author, Year]','var(--blue)')">Cite</button>
+        <button class="t-tool" onclick="ins('[GAP: ]','var(--red)')">Gap</button>
+        <button class="t-tool" onclick="ins('[NOTE: ]','var(--gold)')">Note</button>
+        <div class="t-divider"></div>
+        <button class="focus-btn" id="focusBtn" onclick="toggleFocus()">⊡ Focus Mode</button>
+      </div>
+
+      <!-- EDITOR -->
+      <div class="editor-wrap" id="edWrap">
+        <div class="ed-section-tag" id="edSectionTag">Chapter 2 · Literature Review</div>
+        <div class="ed-chapter-title" id="edChapterTitle">2.2 — Research Gap Analysis</div>
+        <div class="ed-divider"></div>
+        <div id="editor" contenteditable="true"
+          data-placeholder="Begin writing — your sprint starts when you do..."
+          oninput="onInput()" onkeydown="onKey(event)">
+          <p>The synthesis of zinc oxide nanoparticles using plant-based extracts has attracted considerable attention over the past decade due to its environmental advantages over conventional chemical synthesis routes. Studies by <span style="color:var(--blue);">[Ref: Sharma et al., 2019]</span> and <span style="color:var(--blue);">[Ref: Osei-Mensah, 2021]</span> demonstrate promising antibacterial properties in biomedical applications.</p>
+          <p>However, a significant gap exists in the literature regarding the systematic optimisation of synthesis parameters — specifically plant extract concentration, pH levels, and reaction temperature — for African plant species. The majority of existing studies focus on Asian botanical sources, leaving the antibacterial efficacy of locally-sourced Ghanaian plant extracts largely unexplored.</p>
+        </div>
+      </div>
+
+      <div class="typing-ind" id="typingInd">Kwame is writing...</div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+      <!-- STATS -->
+      <div class="p-section" style="padding:0;">
+        <div class="stats-grid">
+          <div class="st-box"><div class="st-val" id="stWords">218</div><div class="st-label">Words total</div></div>
+          <div class="st-box"><div class="st-val" id="stWPM">—</div><div class="st-label">Words/min</div></div>
+          <div class="st-box"><div class="st-val" id="stSprint">0</div><div class="st-label">This sprint</div></div>
+          <div class="st-box"><div class="st-val" style="color:var(--green);">🔥6</div><div class="st-label">Day streak</div></div>
+        </div>
+      </div>
+
+      <!-- SPRINT LOG -->
+      <div class="p-section">
+        <div class="p-label">Sprint Log</div>
+        <div class="sprint-log" id="sprintLog">
+          <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);text-align:center;padding:0.4rem;">No sprints yet</div>
+        </div>
+      </div>
+
+      <!-- SAVED REFLECTIONS -->
+      <div class="p-section">
+        <div class="p-label">Saved Reflections</div>
+        <div class="reflect-saved" id="reflectSaved">
+          <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);text-align:center;padding:0.4rem;">Reflections appear after each sprint</div>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="p-section" style="flex:1;display:flex;flex-direction:column;padding:0;">
+        <div style="padding:0.7rem 1rem;border-bottom:1px solid var(--border);"><div class="p-label" style="margin-bottom:0;">Room Chat</div></div>
+        <div class="chat-wrap">
+          <div class="chat-msgs" id="chatMsgs">
+            <div class="c-msg sys"><div class="c-author sys">System</div><div class="c-text">Sprint room open · 5 scholars writing · Notifications paused ✦</div></div>
+            <div class="c-msg"><div class="c-author">Kwame</div><div class="c-text">Let's hit 300 words each 💪</div></div>
+            <div class="c-msg"><div class="c-author">Efia</div><div class="c-text">Stuck on my methodology 😅</div></div>
+            <div class="c-msg you"><div class="c-author you">You</div><div class="c-text">Focus! Questions at break time.</div></div>
+          </div>
+          <!-- QUICK REACTIONS -->
+          <div class="reactions-bar">
+            <button class="react-btn" onclick="sendReaction('🔥')">🔥</button>
+            <button class="react-btn" onclick="sendReaction('💪')">💪</button>
+            <button class="react-btn" onclick="sendReaction('✦')">✦</button>
+            <button class="react-btn" onclick="sendReaction('👀')">👀</button>
+            <button class="react-btn" onclick="sendReaction('✅')">✅</button>
+          </div>
+          <div class="chat-input-row">
+            <input class="c-input" type="text" placeholder="Message room..." onkeydown="if(event.key==='Enter')sendChat(this)"/>
+            <button class="c-send" onclick="sendChat(document.querySelector('.c-input'))">→</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MILESTONE SYNC TOAST -->
+<div class="ms-toast" id="msToast">
+  <div style="font-size:1.1rem;">✦</div>
+  <div class="ms-toast-text"><strong id="msToastTitle">Milestone Updated</strong><span id="msToastBody">Word count synced to milestone tracker.</span></div>
+</div>
+
+<!-- SPRINT TOAST -->
+<div class="toast" id="toast"><div class="toast-t" id="toastT">Update</div><div class="toast-b" id="toastB">Keep going.</div></div>
+
+<!-- END SCREEN -->
+<div class="end-screen" id="endScreen">
+  <div class="end-tag">Session Complete</div>
+  <div class="end-title">You <em>showed up.</em><br/>That's everything.</div>
+  <div class="end-stats">
+    <div class="end-st"><div class="end-st-val" id="endW">0</div><div class="end-st-label">Words written</div></div>
+    <div class="end-st"><div class="end-st-val" id="endSp">0</div><div class="end-st-label">Sprints done</div></div>
+    <div class="end-st"><div class="end-st-val" id="endTm">0m</div><div class="end-st-label">Time focused</div></div>
+    <div class="end-st"><div class="end-st-val" style="color:var(--green);">🔥7</div><div class="end-st-label">Day streak</div></div>
+  </div>
+  <div class="end-reflections" id="endReflections" style="display:none;">
+    <div class="end-reflect-title">Your Sprint Reflections — Saved to Writing Workspace</div>
+    <div class="end-reflect-list" id="endReflectList"></div>
+  </div>
+  <div class="end-actions">
+    <button class="end-btn" onclick="document.getElementById('endScreen').classList.remove('on')">Keep Writing</button>
+    <button class="end-btn primary" onclick="window.location.href='academic-engine-dashboard.html'">Back to Dashboard →</button>
+  </div>
+</div>
+
+<script>
+  // ── SETUP SCREEN ──
+  let sessionMode = '50/10';
+  let wordTarget = 500;
+  let selectedChapter = 'lit';
+  let selectedSection = '2.2 — Research Gap';
+  let isSolo = false;
+
+  function selectChip(el) {
+    document.querySelectorAll('.section-chip').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedSection = el.textContent;
+    updatePrompts();
+  }
+
+  function selectMode(el, mode) {
+    document.querySelectorAll('.mode-tile').forEach(m => m.classList.remove('selected'));
+    el.classList.add('selected');
+    sessionMode = mode;
+    if (mode === '90') { WORK_SECS = 90*60; MAX_SPRINTS = 1; }
+    else if (mode === 'free') { WORK_SECS = 99*60; MAX_SPRINTS = 1; }
+    else { WORK_SECS = 50*60; MAX_SPRINTS = 4; }
+    timeLeft = WORK_SECS;
+  }
+
+  function joinScheduledRoom(el) {
+    document.querySelectorAll('.room-item').forEach(r => r.style.borderColor = '');
+    el.style.borderColor = 'var(--gold)';
+  }
+
+  function startSession(solo) {
+    isSolo = solo;
+    wordTarget = parseInt(document.getElementById('setupWordTarget').value) || 500;
+    selectedChapter = document.getElementById('setupChapter').value;
+
+    // Update UI with setup choices
+    const chapterNames = { lit: 'Ch. 2 — Literature Review', method: 'Ch. 3 — Methodology', results: 'Ch. 4 — Results', discussion: 'Ch. 5 — Discussion', abstract: 'Conference Abstract', proposal: 'Research Proposal' };
+    document.getElementById('targetChapter').textContent = chapterNames[selectedChapter] || 'Chapter';
+    document.getElementById('targetSection').textContent = selectedSection;
+    document.getElementById('targetWC').textContent = 'Target: ' + wordTarget + ' words';
+    document.getElementById('wTarget').textContent = '218 / ' + wordTarget + ' words';
+    document.getElementById('sessionTitle').textContent = solo ? 'Solo Session' : 'Friday Morning Sprint';
+    document.getElementById('sessionPhase').textContent = (chapterNames[selectedChapter] || '') + ' · ' + selectedSection;
+    document.getElementById('edSectionTag').textContent = chapterNames[selectedChapter] || '';
+    document.getElementById('edChapterTitle').textContent = selectedSection;
+    if (solo) { document.getElementById('liveCount').textContent = 'Solo'; }
+
+    updatePrompts();
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('appShell').style.display = 'flex';
+    document.getElementById('appShell').style.flexDirection = 'column';
+    document.getElementById('appShell').style.flex = '1';
+    document.getElementById('appShell').style.minHeight = '0';
+    document.getElementById('glow').className = 'ambient-glow active';
+    showToast('Session Ready', 'Your space is set. Start writing when you\'re ready.');
+  }
+
+  // ── ADAPTIVE PROMPTS ──
+  const PROMPTS = {
+    lit: [
+      { tag: 'Research Gap Analysis', text: 'State the specific gap your research fills in 2–3 sentences. Name the gap precisely — not the topic, the gap. What does existing literature fail to address?' },
+      { tag: 'Literature Synthesis', text: 'Choose 3 papers you\'ve read. In one sentence each: what did they prove, and what did they leave open?' },
+      { tag: 'Argument Building', text: 'Write the central claim of your literature review as a single declarative sentence. No hedging. Just the claim.' },
+    ],
+    method: [
+      { tag: 'Methodology Justification', text: 'In 2–3 sentences, explain why your chosen methodology is the right fit for your research question. What alternatives did you reject and why?' },
+      { tag: 'Procedure Detail', text: 'Describe one step of your methodology as if explaining it to a peer reviewer who will try to replicate it. Be precise enough that they could.' },
+      { tag: 'Validity Statement', text: 'How will you ensure the reliability and validity of your data? Write this as a concrete statement, not a vague intention.' },
+    ],
+    results: [
+      { tag: 'Data Description', text: 'Describe your most significant finding in one paragraph. Don\'t interpret — just describe exactly what the data shows.' },
+      { tag: 'Pattern Recognition', text: 'What is the most unexpected thing your results revealed? Write about it without explaining it yet — just state it clearly.' },
+    ],
+    discussion: [
+      { tag: 'Interpretation', text: 'Take your key finding and connect it to one paper from your literature review. What does your result confirm, challenge, or extend?' },
+      { tag: 'Implications', text: 'Write one paragraph on the practical implications of your research. Who benefits, and how?' },
+    ],
+    abstract: [
+      { tag: 'Abstract: Problem Statement', text: 'In 1–2 sentences, state the problem your research addresses. This is the first sentence a reviewer reads. Make it undeniable.' },
+      { tag: 'Abstract: Contribution', text: 'State your paper\'s contribution in one sentence. What does your research add that didn\'t exist before?' },
+    ],
+    proposal: [
+      { tag: 'Proposal: Rationale', text: 'Why is your research necessary right now? Write a 2-sentence case for urgency — why this topic, why this method, why you.' },
+    ],
+  };
+  let promptIdx = 0;
+  function updatePrompts() {
+    const ch = document.getElementById('setupChapter')?.value || selectedChapter;
+    const list = PROMPTS[ch] || PROMPTS.lit;
+    promptIdx = 0;
+    document.getElementById('promptTag').textContent = list[0].tag;
+    document.getElementById('promptText').textContent = list[0].text;
+  }
+  function nextPrompt() {
+    const list = PROMPTS[selectedChapter] || PROMPTS.lit;
+    promptIdx = (promptIdx + 1) % list.length;
+    document.getElementById('promptTag').textContent = list[promptIdx].tag;
+    document.getElementById('promptText').textContent = list[promptIdx].text;
+  }
+
+  // ── TIMER ──
+  let WORK_SECS = 50 * 60;
+  let BREAK_SECS = 10 * 60;
+  let MAX_SPRINTS = 4;
+  const ARC = 339.3;
+  let timeLeft = WORK_SECS;
+  let running = false;
+  let onBreak = false;
+  let interval = null;
+  let wpmInterval = null;
+  let sprintsDone = 0;
+  let sprintStartWC = 0;
+  let lastWC = 0;
+  let totalFocusTime = 0;
+
+  function toggleTimer() {
+    if (!running) startTimer(); else pauseTimer();
+  }
+
+  function startTimer() {
+    running = true;
+    document.getElementById('goBtn').textContent = '⏸ Pause';
+    document.getElementById('goBtn').classList.remove('go');
+    document.getElementById('goBtn').style.cssText = 'border-color:var(--gold);color:var(--gold);background:transparent;';
+    document.getElementById('yourSt').textContent = 'Writing';
+    sprintStartWC = countWords();
+    interval = setInterval(tick, 1000);
+    wpmInterval = setInterval(calcWPM, 10000);
+    showToast('Sprint Started ▶', 'Focus. Write. Don\'t stop until the timer does.');
+  }
+
+  function pauseTimer() {
+    running = false;
+    clearInterval(interval);
+    document.getElementById('goBtn').textContent = '▶ Resume';
+    document.getElementById('goBtn').style.cssText = 'background:var(--gold);border-color:var(--gold);color:var(--black);';
+    document.getElementById('yourSt').textContent = 'Paused';
+  }
+
+  function resetTimer() {
+    pauseTimer();
+    onBreak = false; timeLeft = WORK_SECS;
+    document.getElementById('goBtn').textContent = '▶ Start';
+    document.getElementById('goBtn').style.cssText = 'background:var(--gold);border-color:var(--gold);color:var(--black);';
+    document.getElementById('tDisplay').textContent = fmtTime(WORK_SECS);
+    document.getElementById('arc').style.strokeDashoffset = '0';
+    document.getElementById('arc').style.stroke = 'var(--gold)';
+    document.getElementById('phaseTag').textContent = 'Deep Work';
+    document.getElementById('phaseTag').className = 'phase-tag work';
+    document.getElementById('breakOverlay').classList.remove('on');
+    for (let i=0;i<4;i++) document.getElementById('d'+i).className = 's-dot' + (i===0?' current':'');
+  }
+
+  function tick() {
+    timeLeft--;
+    totalFocusTime++;
+    updateTimerDisplay();
+    updateArc();
+    if (timeLeft <= 0) { if (!onBreak) beginBreak(); else endBreak(); }
+  }
+
+  function beginBreak() {
+    clearInterval(interval);
+    clearInterval(wpmInterval);
+    onBreak = true;
+    timeLeft = BREAK_SECS;
+    sprintsDone++;
+    const wordsThisSprint = Math.max(0, countWords() - sprintStartWC);
+    logSprint(sprintsDone, wordsThisSprint);
+    if (sprintsDone <= 4) {
+      document.getElementById('d'+(sprintsDone-1)).className = 's-dot done';
+      if (sprintsDone < 4) document.getElementById('d'+sprintsDone).className = 's-dot current';
+    }
+    document.getElementById('phaseTag').textContent = 'Break Time';
+    document.getElementById('phaseTag').className = 'phase-tag break';
+    document.getElementById('arc').style.stroke = 'var(--green)';
+    document.getElementById('breakOverlay').classList.add('on');
+    document.getElementById('yourSt').textContent = 'On break';
+    document.getElementById('tSub').textContent = 'Sprint '+sprintsDone+' done';
+    document.getElementById('reflectInput').value = '';
+    addChat('System', 'Sprint '+sprintsDone+' complete. '+wordsThisSprint+' words. Take your break ✦', 'sys');
+    interval = setInterval(() => { timeLeft--; updateBreak(); if (timeLeft<=0) endBreak(); }, 1000);
+  }
+
+  function endBreak() {
+    clearInterval(interval);
+    onBreak = false;
+    if (sprintsDone >= MAX_SPRINTS) { showEnd(); return; }
+    timeLeft = WORK_SECS;
+    sprintStartWC = countWords();
+    document.getElementById('breakOverlay').classList.remove('on');
+    document.getElementById('phaseTag').textContent = 'Deep Work';
+    document.getElementById('phaseTag').className = 'phase-tag work';
+    document.getElementById('arc').style.stroke = 'var(--gold)';
+    document.getElementById('tSub').textContent = 'Sprint '+(sprintsDone+1)+' of '+MAX_SPRINTS;
+    document.getElementById('yourSt').textContent = 'Writing';
+    interval = setInterval(tick, 1000);
+    wpmInterval = setInterval(calcWPM, 10000);
+    updateArc();
+  }
+
+  function skipBreak() { saveReflection(); endBreak(); }
+
+  function updateTimerDisplay() {
+    document.getElementById('tDisplay').textContent = fmtTime(timeLeft);
+  }
+
+  function updateBreak() {
+    const t = fmtTime(timeLeft);
+    document.getElementById('tDisplay').textContent = t;
+    document.getElementById('breakClock').textContent = t;
+  }
+
+  function updateArc() {
+    const pct = timeLeft / WORK_SECS;
+    document.getElementById('arc').style.strokeDashoffset = ARC * (1 - pct);
+  }
+
+  function fmtTime(s) {
+    const m = Math.floor(s/60), sec = s%60;
+    return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+  }
+
+  // ── WORD COUNT ──
+  function countWords() {
+    const t = document.getElementById('editor').innerText || '';
+    return t.trim().split(/\s+/).filter(w=>w.length>0).length;
+  }
+
+  let typingTimer;
+  function onInput() {
+    const wc = countWords();
+    const sprintWC = Math.max(0, wc - sprintStartWC);
+    document.getElementById('stWords').textContent = wc;
+    document.getElementById('stSprint').textContent = sprintWC;
+    document.getElementById('sessionW').textContent = wc;
+    document.getElementById('sprintW').textContent = sprintWC;
+    const pct = Math.min(100, (wc / wordTarget) * 100);
+    document.getElementById('wFill').style.width = pct + '%';
+    document.getElementById('wTarget').textContent = wc + ' / ' + wordTarget + ' words';
+    document.getElementById('endW').textContent = wc;
+
+    // Milestone sync toast at 50%, 100%
+    if (wc === Math.floor(wordTarget * 0.5)) showMilestoneToast('Halfway There ✦', wc+' words — milestone progress updated live.');
+    if (wc >= wordTarget) showMilestoneToast('Target Reached! 🎯', wc+' words. Milestone marked complete in tracker.');
+  }
+
+  function onKey(e) {
+    if (e.key === 'Tab') { e.preventDefault(); document.execCommand('insertText', false, '    '); }
+  }
+
+  function calcWPM() {
+    const wc = countWords();
+    const diff = Math.max(0, wc - lastWC);
+    document.getElementById('stWPM').textContent = Math.round((diff/10)*60);
+    lastWC = wc;
+  }
+
+  // ── REFLECTIONS ──
+  const reflections = [];
+  function saveReflection() {
+    const val = document.getElementById('reflectInput').value.trim();
+    if (!val) return;
+    reflections.push({ sprint: sprintsDone, text: val });
+    const saved = document.getElementById('reflectSaved');
+    saved.innerHTML = '';
+    reflections.forEach(r => {
+      const item = document.createElement('div');
+      item.className = 'rs-item';
+      item.innerHTML = `<div class="rs-tag">Sprint ${r.sprint} reflection</div><div class="rs-text">${r.text}</div>`;
+      saved.appendChild(item);
+    });
+    document.getElementById('reflectInput').value = '';
+    showToast('Reflection Saved ✦', 'Added to your Writing Workspace notes.');
+  }
+
+  // ── SPRINT LOG ──
+  function logSprint(num, words) {
+    const log = document.getElementById('sprintLog');
+    if (num === 1) log.innerHTML = '';
+    const pct = Math.min(100, (words/300)*100);
+    const item = document.createElement('div');
+    item.className = 'sl-item';
+    item.innerHTML = `<div class="sl-num">0${num}</div><div class="sl-info"><div class="sl-words">${words} words</div><div class="sl-time">50 min sprint</div><div class="sl-bar"><div class="sl-fill" style="width:${pct}%"></div></div></div>`;
+    log.appendChild(item);
+    document.getElementById('endSp').textContent = num;
+    document.getElementById('endTm').textContent = Math.round(totalFocusTime/60)+'m';
+  }
+
+  // ── FORMATTING ──
+  function fmt(cmd, val) { document.execCommand(cmd, false, val||null); document.getElementById('editor').focus(); }
+  function ins(tag, color) {
+    document.execCommand('insertHTML', false, `<span style="color:${color};">${tag}</span> `);
+    document.getElementById('editor').focus();
+  }
+
+  // ── FOCUS MODE ──
+  let focusOn = false;
+  function toggleFocus() {
+    focusOn = !focusOn;
+    document.getElementById('edWrap').classList.toggle('focus', focusOn);
+    document.getElementById('focusBtn').classList.toggle('on', focusOn);
+    document.getElementById('focusBtn').textContent = focusOn ? '⊡ Exit Focus' : '⊡ Focus Mode';
+  }
+
+  // ── CHAT ──
+  function sendChat(input) {
+    const val = input.value.trim();
+    if (!val) return;
+    addChat('You', val, 'you');
+    input.value = '';
+    if (Math.random() > 0.5) {
+      setTimeout(() => {
+        const r = ['💪 Let\'s go!','Same here!','Almost there ✦','Great session everyone!','Keep going!'];
+        addChat('Kwame', r[Math.floor(Math.random()*r.length)], '');
+      }, 1800);
+    }
+  }
+
+  function sendReaction(emoji) { addChat('You', emoji, 'you'); }
+
+  function addChat(author, text, type) {
+    const msgs = document.getElementById('chatMsgs');
+    const msg = document.createElement('div');
+    msg.className = 'c-msg' + (type ? ' '+type : '');
+    msg.innerHTML = `<div class="c-author ${type==='you'?'you':type==='sys'?'sys':''}">${author}</div><div class="c-text">${text}</div>`;
+    msgs.appendChild(msg);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // ── TOASTS ──
+  function showToast(title, body) {
+    document.getElementById('toastT').textContent = title;
+    document.getElementById('toastB').textContent = body;
+    const t = document.getElementById('toast');
+    t.classList.add('on');
+    setTimeout(() => t.classList.remove('on'), 3500);
+  }
+
+  function showMilestoneToast(title, body) {
+    document.getElementById('msToastTitle').textContent = title;
+    document.getElementById('msToastBody').textContent = body;
+    const t = document.getElementById('msToast');
+    t.classList.add('on');
+    setTimeout(() => t.classList.remove('on'), 4000);
+  }
+
+  // ── END SCREEN ──
+  function showEnd() {
+    document.getElementById('endW').textContent = countWords();
+    document.getElementById('endSp').textContent = sprintsDone;
+    document.getElementById('endTm').textContent = Math.round(totalFocusTime/60)+'m';
+    if (reflections.length > 0) {
+      const endRef = document.getElementById('endReflections');
+      endRef.style.display = 'block';
+      const list = document.getElementById('endReflectList');
+      list.innerHTML = '';
+      reflections.forEach(r => {
+        const item = document.createElement('div');
+        item.className = 'end-reflect-item';
+        item.textContent = r.text;
+        list.appendChild(item);
+      });
+    }
+    document.getElementById('endScreen').classList.add('on');
+  }
+
+  function confirmEnd() {
+    if (confirm('End this session? Progress will be saved.')) showEnd();
+  }
+
+  // ── SIMULATED ACTIVITY ──
+  setTimeout(() => {
+    const ind = document.getElementById('typingInd');
+    const names = ['Kwame is writing...', 'Ama is writing...', 'Sena is writing...'];
+    let ni = 0;
+    setInterval(() => {
+      if (Math.random() > 0.5 && !onBreak) {
+        ind.textContent = names[ni % names.length]; ni++;
+        ind.classList.add('on');
+        setTimeout(() => ind.classList.remove('on'), 2000);
+      }
+    }, 9000);
+  }, 4000);
+
+  const autoChats = [
+    { from:'Kwame', text:'200 words in 🔥', type:'' },
+    { from:'System', text:'Efia just finished her break. Welcome back ✦', type:'sys' },
+    { from:'Ama', text:'This is the most I\'ve written in weeks', type:'' },
+    { from:'System', text:'Sena just hit their word target. 🎯', type:'sys' },
+  ];
+  let ci = 0;
+  setTimeout(() => {
+    const ct = setInterval(() => {
+      if (ci < autoChats.length && document.getElementById('appShell').style.display !== 'none') {
+        const m = autoChats[ci]; addChat(m.from, m.text, m.type); ci++;
+      } else clearInterval(ct);
+    }, 14000);
+  }, 8000);
+</script>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo</span>
+    <a href="index.html" class="dnav-link">Home</a>
+    <a href="academic-engine-landing.html" class="dnav-link">Landing</a>
+    <a href="academic-engine-onboarding.html" class="dnav-link">Onboarding</a>
+    <a href="academic-engine-dashboard.html" class="dnav-link">Dashboard</a>
+    <a href="academic-engine-milestones.html" class="dnav-link">Milestones</a>
+    <a href="academic-engine-sprint.html" class="dnav-link">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" class="dnav-link">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem 0.5rem;margin-left:0.2rem;">✕</button>
+  </div>
+  <style>
+    .dnav-link { font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s; }
+    .dnav-link:hover { border-color:#c9a84c;color:#c9a84c; }
+  </style>
+
+</body>
+</html>

@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine — Milestone Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808; --deep: #0e0e0e; --card: #141414; --card2: #181818;
+      --border: #222; --border2: #2a2a2a;
+      --gold: #c9a84c; --gold-light: #e8c87a; --gold-dim: rgba(201,168,76,0.12);
+      --cream: #f5f0e8; --muted: #555; --muted2: #777; --text: #d0cbc3;
+      --green: #4caf7d; --green-dim: rgba(76,175,125,0.12);
+      --red: #e05c5c; --red-dim: rgba(224,92,92,0.1);
+      --blue: #5c8fe0; --blue-dim: rgba(92,143,224,0.1);
+      --purple: #9c6ee0;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; display: flex; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; }
+
+    /* SIDEBAR */
+    .sidebar { width: 240px; flex-shrink: 0; background: var(--deep); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; overflow-y: auto; }
+    .sidebar-logo { padding: 1.8rem 1.5rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
+    .sidebar-logo p { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+    .sidebar-scholar { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; }
+    .scholar-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8a6e2f); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--black); flex-shrink: 0; }
+    .scholar-name { font-size: 0.82rem; font-weight: 500; color: var(--cream); }
+    .scholar-dept { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--gold); text-transform: uppercase; margin-top: 0.15rem; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-section-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding: 0.8rem 1.5rem 0.4rem; }
+    .nav-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 1.5rem; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; font-size: 0.82rem; color: var(--muted2); text-decoration: none; }
+    .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: var(--gold-dim); }
+    .nav-icon { font-size: 0.9rem; width: 1.2rem; text-align: center; }
+    .nav-badge { margin-left: auto; background: var(--gold); color: var(--black); font-family: 'DM Mono', monospace; font-size: 0.55rem; padding: 0.1rem 0.4rem; border-radius: 2px; }
+    .sidebar-phase { padding: 1.2rem 1.5rem; border-top: 1px solid var(--border); margin-top: auto; }
+    .phase-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .phase-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--gold); margin-bottom: 0.5rem; }
+    .phase-bar-track { height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+    .phase-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; width: 38%; }
+    .phase-pct { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.4rem; }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* TOPBAR */
+    .topbar { position: sticky; top: 0; z-index: 40; background: rgba(8,8,8,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .topbar-left h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--cream); }
+    .topbar-left p { font-size: 0.75rem; color: var(--muted2); margin-top: 0.1rem; }
+    .topbar-right { display: flex; align-items: center; gap: 0.8rem; }
+    .topbar-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 1.2rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .topbar-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .topbar-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .topbar-btn.primary:hover { background: var(--gold-light); }
+
+    /* CONTENT */
+    .content { padding: 2rem 2.5rem 5rem; display: flex; flex-direction: column; gap: 1.8rem; }
+
+    /* SUMMARY ROW */
+    .summary-row { display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; background: var(--border); }
+    .summary-card { background: var(--card); padding: 1.2rem 1.4rem; }
+    .summary-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; }
+    .summary-val { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; line-height: 1; }
+    .summary-sub { font-size: 0.68rem; color: var(--muted2); margin-top: 0.3rem; }
+    .summary-bar { height: 3px; background: var(--border2); border-radius: 2px; margin-top: 0.6rem; overflow: hidden; }
+    .summary-bar-fill { height: 100%; border-radius: 2px; }
+
+    /* WEEK STRIP */
+    .week-strip { background: var(--card); border: 1px solid var(--border); padding: 1.2rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .week-nav { display: flex; align-items: center; gap: 1rem; }
+    .week-btn { width: 28px; height: 28px; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
+    .week-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .week-label { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--cream); font-weight: 700; }
+    .week-sub { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--muted); letter-spacing: 0.1em; }
+    .week-days { display: flex; gap: 0.4rem; }
+    .week-day { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.4rem 0.6rem; border: 1px solid var(--border); background: var(--deep); min-width: 42px; cursor: pointer; transition: all 0.15s; }
+    .week-day.today { border-color: var(--gold); background: var(--gold-dim); }
+    .week-day.has-done { border-color: rgba(76,175,125,0.3); }
+    .day-name { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .day-num { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--cream); }
+    .week-day.today .day-num { color: var(--gold); }
+    .day-dots { display: flex; gap: 2px; }
+    .day-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border2); }
+    .day-dot.done { background: var(--green); }
+    .day-dot.pending { background: var(--gold); }
+    .week-progress-ring { position: relative; width: 52px; height: 52px; flex-shrink: 0; }
+    .week-progress-ring svg { transform: rotate(-90deg); }
+
+    /* FILTER BAR */
+    .filter-bar { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .filter-chip { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.4rem 0.9rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.15s; }
+    .filter-chip:hover { border-color: var(--gold); color: var(--gold); }
+    .filter-chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+    .filter-chip.f-research.active { background: var(--blue-dim); border-color: rgba(92,143,224,0.4); color: var(--blue); }
+    .filter-chip.f-admin.active { background: var(--green-dim); border-color: rgba(76,175,125,0.4); color: var(--green); }
+    .filter-chip.f-overdue.active { background: var(--red-dim); border-color: rgba(224,92,92,0.4); color: var(--red); }
+    .filter-search { margin-left: auto; }
+    .filter-search input { background: var(--card); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; padding: 0.5rem 0.9rem; outline: none; width: 200px; transition: border-color 0.2s; }
+    .filter-search input:focus { border-color: var(--gold); }
+
+    /* TRACKER GRID */
+    .tracker-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; align-items: start; }
+
+    /* MILESTONE SECTION */
+    .milestone-section { background: var(--card); border: 1px solid var(--border); margin-bottom: 1.2rem; }
+    .milestone-section:last-child { margin-bottom: 0; }
+    .section-header { padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .section-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 0.5rem; }
+    .section-count { background: var(--border2); color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.55rem; padding: 0.15rem 0.5rem; }
+    .section-action { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: color 0.2s; }
+    .section-action:hover { color: var(--gold); }
+    .milestone-group-header { padding: 0.7rem 1.5rem; background: var(--deep); font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); }
+
+    /* MILESTONE ITEM */
+    .milestone-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: pointer; position: relative; border-left: 2px solid transparent; }
+    .milestone-item:last-child { border-bottom: none; }
+    .milestone-item:hover { background: var(--deep); }
+    .milestone-item.done { opacity: 0.55; }
+    .milestone-item.done .milestone-title { text-decoration: line-through; color: var(--muted); }
+    .milestone-item.overdue { border-left-color: var(--red); }
+    .milestone-item.urgent { border-left-color: var(--gold); }
+    .milestone-item.celebrating { animation: celebrate 0.6s ease; }
+    @keyframes celebrate { 0%{transform:scale(1);}30%{transform:scale(1.01);}60%{transform:scale(0.99);}100%{transform:scale(1);} }
+
+    /* CHECKBOX */
+    .m-check { width: 20px; height: 20px; border: 1.5px solid var(--border2); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; color: var(--green); font-size: 0.7rem; }
+    .milestone-item.done .m-check { background: var(--green); border-color: var(--green); color: white; }
+    .milestone-item:hover .m-check:not(.done) { border-color: var(--gold); }
+
+    /* MILESTONE CONTENT */
+    .m-content { flex: 1; min-width: 0; }
+    .milestone-title { font-size: 0.85rem; color: var(--cream); line-height: 1.5; font-weight: 400; }
+    .milestone-desc { font-size: 0.75rem; color: var(--muted2); margin-top: 0.2rem; line-height: 1.5; }
+    .milestone-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+    .m-tag { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.12rem 0.5rem; border: 1px solid; }
+    .m-tag.writing { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+    .m-tag.research { border-color: rgba(92,143,224,0.3); color: var(--blue); }
+    .m-tag.admin { border-color: rgba(76,175,125,0.3); color: var(--green); }
+    .m-tag.publication { border-color: rgba(156,110,224,0.3); color: var(--purple); }
+    .m-due { font-family: 'DM Mono', monospace; font-size: 0.52rem; color: var(--muted); }
+    .m-due.overdue { color: var(--red); }
+    .m-due.today { color: var(--gold); }
+    .m-priority { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.4rem; border: 1px solid; }
+    .m-priority.high { border-color: rgba(224,92,92,0.3); color: var(--red); }
+    .m-priority.medium { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+    .m-priority.low { border-color: var(--border2); color: var(--muted); }
+
+    /* ADVISOR LINK BADGE */
+    .m-advisor-link { display: inline-flex; align-items: center; gap: 0.3rem; font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.5rem; border: 1px solid rgba(76,175,125,0.3); color: var(--green); background: var(--green-dim); cursor: pointer; transition: all 0.15s; }
+    .m-advisor-link:hover { border-color: var(--green); }
+
+    /* PROGRESS */
+    .m-progress { margin-top: 0.5rem; }
+    .m-progress-row { display: flex; align-items: center; gap: 0.6rem; }
+    .m-progress-track { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; max-width: 180px; }
+    .m-progress-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.3s ease; }
+    .m-progress-pct { font-family: 'DM Mono', monospace; font-size: 0.52rem; color: var(--muted); }
+
+    /* SUB-TASKS */
+    .subtasks { margin-top: 0.7rem; margin-left: 0; display: flex; flex-direction: column; gap: 0.3rem; padding-left: 1rem; border-left: 2px solid var(--border2); }
+    .subtask { display: flex; align-items: center; gap: 0.6rem; padding: 0.25rem 0; cursor: pointer; }
+    .subtask-check { width: 14px; height: 14px; border: 1.5px solid var(--border2); border-radius: 2px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; color: var(--green); transition: all 0.15s; }
+    .subtask.done .subtask-check { background: var(--green); border-color: var(--green); color: white; }
+    .subtask.done .subtask-label { text-decoration: line-through; color: var(--muted); }
+    .subtask-label { font-size: 0.75rem; color: var(--text); }
+    .subtask-add { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; cursor: pointer; }
+    .subtask-add span { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); letter-spacing: 0.1em; transition: color 0.15s; }
+    .subtask-add:hover span { color: var(--gold); }
+    .subtask-inline-input { background: transparent; border: none; border-bottom: 1px solid var(--border2); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.75rem; padding: 0.1rem 0; outline: none; width: 200px; }
+    .subtask-inline-input:focus { border-color: var(--gold); }
+
+    /* MILESTONE ACTIONS */
+    .m-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.4rem; flex-shrink: 0; }
+    .m-action-btn { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.5rem; border: 1px solid var(--border2); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+    .m-action-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ADD ROW */
+    .add-milestone-row { padding: 1rem 1.5rem; border-top: 1px solid var(--border); background: var(--deep); display: flex; align-items: center; gap: 0.8rem; }
+    .add-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border2); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.4rem 0; outline: none; transition: border-color 0.2s; }
+    .add-input:focus { border-color: var(--gold); }
+    .add-input::placeholder { color: var(--muted); }
+    .add-submit { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.5rem 1rem; background: var(--gold); border: none; color: var(--black); cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .add-submit:hover { background: var(--gold-light); }
+
+    /* RIGHT PANEL */
+    .right-panel { display: flex; flex-direction: column; gap: 1.2rem; }
+    .panel-card { background: var(--card); border: 1px solid var(--border); }
+    .panel-header { padding: 1rem 1.2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .panel-title { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .panel-action { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: color 0.2s; }
+    .panel-action:hover { color: var(--gold); }
+    .panel-body { padding: 1.2rem; }
+
+    /* DUO PARTNER VISIBILITY */
+    .duo-visibility { display: flex; align-items: center; gap: 0.8rem; padding: 0.9rem 1.1rem; background: var(--deep); border: 1px solid var(--border); border-left: 3px solid var(--blue); margin-bottom: 0.8rem; }
+    .duo-avatar-xs { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#5c8fe0,#2d5aa8); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 0.75rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .duo-vis-info { flex: 1; }
+    .duo-vis-name { font-size: 0.78rem; color: var(--cream); font-weight: 500; }
+    .duo-vis-status { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--blue); margin-top: 0.15rem; }
+    .duo-milestone-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .duo-milestone-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.7rem; background: var(--card); border: 1px solid var(--border2); font-size: 0.75rem; color: var(--text); }
+    .duo-milestone-item.done { opacity: 0.5; }
+    .duo-milestone-item.done span { text-decoration: line-through; }
+    .duo-check-sm { width: 12px; height: 12px; border-radius: 2px; border: 1px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.45rem; }
+    .duo-milestone-item.done .duo-check-sm { background: var(--green); border-color: var(--green); color: white; }
+    .duo-nudge-sm { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; padding: 0.15rem 0.4rem; border: 1px solid var(--border2); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+    .duo-nudge-sm:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* PHASE MAP */
+    .phase-map { display: flex; flex-direction: column; gap: 0.8rem; }
+    .phase-map-item { display: flex; align-items: flex-start; gap: 0.8rem; position: relative; }
+    .phase-map-item::before { content: ''; position: absolute; left: 7px; top: 18px; bottom: -16px; width: 1px; background: var(--border2); }
+    .phase-map-item:last-child::before { display: none; }
+    .phase-map-dot { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 2px; background: var(--card); }
+    .phase-map-dot.done { border-color: var(--green); background: var(--green); }
+    .phase-map-dot.done::after { content: '✓'; font-size: 0.5rem; color: white; }
+    .phase-map-dot.active { border-color: var(--gold); background: var(--gold-dim); }
+    .phase-map-dot.active::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+    .phase-map-title { font-size: 0.8rem; color: var(--cream); line-height: 1.4; }
+    .phase-map-meta { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); margin-top: 0.2rem; }
+    .phase-map-title.done { color: var(--muted); text-decoration: line-through; }
+
+    /* STREAK CALENDAR */
+    .streak-day-labels { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 4px; }
+    .streak-day-label { font-family: 'DM Mono', monospace; font-size: 0.48rem; text-transform: uppercase; color: var(--muted); text-align: center; }
+    .streak-cal { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+    .streak-cell { aspect-ratio: 1; border-radius: 2px; cursor: pointer; }
+    .streak-cell.empty { background: var(--border2); }
+    .streak-cell.low { background: rgba(201,168,76,0.2); }
+    .streak-cell.mid { background: rgba(201,168,76,0.5); }
+    .streak-cell.high { background: var(--gold); }
+    .streak-cell.today { outline: 2px solid var(--gold-light); outline-offset: 1px; }
+    .streak-legend { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.8rem; font-family: 'DM Mono', monospace; font-size: 0.5rem; color: var(--muted); }
+    .streak-legend-dots { display: flex; gap: 2px; }
+    .streak-legend-dot { width: 9px; height: 9px; border-radius: 1px; }
+
+    /* INSIGHTS */
+    .insight-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .insight-item { padding: 0.8rem 1rem; background: var(--deep); border: 1px solid var(--border); border-left: 2px solid; display: flex; align-items: flex-start; gap: 0.7rem; }
+    .insight-item.tip { border-left-color: var(--gold); }
+    .insight-item.warn { border-left-color: var(--red); }
+    .insight-item.good { border-left-color: var(--green); }
+    .insight-icon { font-size: 0.9rem; flex-shrink: 0; }
+    .insight-text { font-size: 0.75rem; color: var(--text); line-height: 1.6; }
+    .insight-text strong { color: var(--cream); }
+
+    /* TEMPLATE PANEL */
+    .template-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .template-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0.9rem; background: var(--deep); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; }
+    .template-item:hover { border-color: var(--gold); background: var(--gold-dim); }
+    .template-icon { font-size: 0.9rem; flex-shrink: 0; }
+    .template-info { flex: 1; }
+    .template-name { font-size: 0.78rem; color: var(--cream); }
+    .template-count { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); margin-top: 0.15rem; }
+    .template-add { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--gold); padding: 0.2rem 0.5rem; border: 1px solid rgba(201,168,76,0.3); transition: all 0.15s; }
+    .template-item:hover .template-add { background: var(--gold); color: var(--black); border-color: var(--gold); }
+
+    /* CELEBRATION TOAST */
+    .toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 500; background: var(--card); border: 1px solid var(--gold); border-left: 3px solid var(--gold); padding: 1rem 1.5rem; display: flex; align-items: center; gap: 1rem; max-width: 320px; transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .toast-text { font-size: 0.82rem; color: var(--cream); line-height: 1.5; }
+    .toast-text strong { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-bottom: 0.2rem; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: none; align-items: center; justify-content: center; padding: 2rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); width: 100%; max-width: 560px; animation: slideUp 0.3s ease; max-height: 90vh; overflow-y: auto; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+    .modal-header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--card); z-index: 1; }
+    .modal-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
+    .modal-close:hover { color: var(--cream); }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .modal-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; display: block; }
+    .modal-input, .modal-select, .modal-textarea { width: 100%; background: var(--deep); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 0.75rem 0.9rem; outline: none; transition: border-color 0.2s; appearance: none; }
+    .modal-input:focus, .modal-select:focus, .modal-textarea:focus { border-color: var(--gold); }
+    .modal-textarea { min-height: 80px; resize: vertical; }
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .modal-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+    .modal-tag-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.3rem; }
+    .modal-tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; padding: 0.3rem 0.7rem; border: 1px solid var(--border2); cursor: pointer; transition: all 0.15s; color: var(--muted2); }
+    .modal-tag:hover { border-color: var(--gold); color: var(--gold); }
+    .modal-tag.sel-writing { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+    .modal-tag.sel-research { background: var(--blue-dim); border-color: rgba(92,143,224,0.4); color: var(--blue); }
+    .modal-tag.sel-admin { background: var(--green-dim); border-color: rgba(76,175,125,0.4); color: var(--green); }
+    .modal-tag.sel-publication { background: rgba(156,110,224,0.1); border-color: rgba(156,110,224,0.4); color: var(--purple); }
+    /* word count toggle */
+    .word-count-toggle { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; background: var(--deep); border: 1px solid var(--border); }
+    .word-count-toggle label { font-size: 0.78rem; color: var(--text); flex: 1; }
+    .toggle-sm { position: relative; width: 36px; height: 18px; flex-shrink: 0; }
+    .toggle-sm input { opacity: 0; width: 0; height: 0; }
+    .toggle-sm-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 18px; cursor: pointer; transition: background 0.3s; }
+    .toggle-sm-slider::before { content: ''; position: absolute; width: 12px; height: 12px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: all 0.3s; }
+    .toggle-sm input:checked + .toggle-sm-slider { background: var(--gold); }
+    .toggle-sm input:checked + .toggle-sm-slider::before { transform: translateX(18px); background: var(--black); }
+    .word-count-field { display: none; }
+    .word-count-field.visible { display: block; }
+    /* subtask editor in modal */
+    .modal-subtasks { display: flex; flex-direction: column; gap: 0.4rem; }
+    .modal-subtask-row { display: flex; align-items: center; gap: 0.5rem; }
+    .modal-subtask-input { flex: 1; background: var(--deep); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; padding: 0.5rem 0.7rem; outline: none; transition: border-color 0.2s; }
+    .modal-subtask-input:focus { border-color: var(--gold); }
+    .modal-subtask-del { background: none; border: 1px solid var(--border2); color: var(--muted); font-size: 0.8rem; cursor: pointer; padding: 0.3rem 0.6rem; transition: all 0.15s; }
+    .modal-subtask-del:hover { border-color: var(--red); color: var(--red); }
+    .modal-add-subtask { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px dashed var(--border2); padding: 0.5rem 1rem; cursor: pointer; transition: all 0.2s; width: 100%; }
+    .modal-add-subtask:hover { border-color: var(--gold); color: var(--gold); }
+    /* advisor link toggle */
+    .advisor-link-toggle { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1rem; background: var(--deep); border: 1px solid var(--border); }
+    .advisor-link-info { flex: 1; }
+    .advisor-link-info span { font-size: 0.78rem; color: var(--text); }
+    .advisor-link-info small { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); display: block; margin-top: 0.1rem; }
+    .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 0.8rem; justify-content: flex-end; position: sticky; bottom: 0; background: var(--card); }
+    .modal-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.7rem 1.4rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .modal-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .modal-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .modal-btn.primary:hover { background: var(--gold-light); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+
+    @media(max-width:1100px){ .tracker-grid{grid-template-columns:1fr;} .right-panel{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;} }
+    @media(max-width:900px){ .sidebar{display:none;} .main{margin-left:0;} .summary-row{grid-template-columns:repeat(3,1fr);} .topbar{padding:1rem 1.2rem;} .content{padding:1.2rem 1.2rem 4rem;} .right-panel{grid-template-columns:1fr;} .week-days{display:none;} .modal-row,.modal-row-3{grid-template-columns:1fr;} }
+    @media(max-width:600px){ .summary-row{grid-template-columns:1fr 1fr;} }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><span>The Academic Engine</span><p>Scholar Dashboard</p></div>
+  <div class="sidebar-scholar">
+    <div class="scholar-avatar">A</div>
+    <div><div class="scholar-name">Your Name</div><div class="scholar-dept">PhD · Engineering</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Workspace</div>
+    <a class="nav-item" href="academic-engine-dashboard.html"><span class="nav-icon">⬡</span> Dashboard</a>
+    <a class="nav-item active" href="academic-engine-milestones.html"><span class="nav-icon">◎</span> Milestones <span class="nav-badge">3</span></a>
+    <a class="nav-item" href="academic-engine-sprint.html"><span class="nav-icon">✦</span> Writing Sprints</a>
+    <a class="nav-item" href="academic-engine-cv-index.html"><span class="nav-icon">◈</span> CV Index</a>
+    <div class="nav-section-label">Community</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⟡</span> Cohort Board</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⇌</span> Weekly Map</a>
+    <a class="nav-item" href="#"><span class="nav-icon">◉</span> Co-Working Rooms <span class="nav-badge">2</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">◷</span> Events</a>
+    <div class="nav-section-label">Research</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⊞</span> Advisor CRM <span class="nav-badge">!</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">◫</span> Resource Feed</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⊕</span> Peer Grid</a>
+    <a class="nav-item" href="#"><span class="nav-icon">◬</span> Opportunity Radar <span class="nav-badge">2</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">◰</span> Grants Tracker</a>
+  </nav>
+  <div class="sidebar-phase">
+    <div class="phase-label">Current Phase</div>
+    <div class="phase-name">Phase 01 · Foundation</div>
+    <div class="phase-bar-track"><div class="phase-bar-fill"></div></div>
+    <div class="phase-pct">38% complete</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>Milestone Tracker</h2>
+      <p>Phase 1 · Foundation · Week 2 of cohort</p>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" onclick="showTemplates()">Templates</button>
+      <button class="topbar-btn primary" onclick="openModal()">+ New Milestone</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- SUMMARY ROW -->
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-label">This Week</div>
+        <div class="summary-val" style="color:var(--gold)">7</div>
+        <div class="summary-sub">of 12 milestones done</div>
+        <div class="summary-bar"><div class="summary-bar-fill" style="width:58%;background:var(--gold);"></div></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">On Track</div>
+        <div class="summary-val" style="color:var(--green)">5</div>
+        <div class="summary-sub">ahead of schedule</div>
+        <div class="summary-bar"><div class="summary-bar-fill" style="width:75%;background:var(--green);"></div></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Overdue</div>
+        <div class="summary-val" style="color:var(--red)">2</div>
+        <div class="summary-sub">need attention now</div>
+        <div class="summary-bar"><div class="summary-bar-fill" style="width:17%;background:var(--red);"></div></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Phase Total</div>
+        <div class="summary-val">24</div>
+        <div class="summary-sub">milestones mapped</div>
+        <div class="summary-bar"><div class="summary-bar-fill" style="width:38%;background:var(--blue);"></div></div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Writing Streak</div>
+        <div class="summary-val" style="color:var(--green)">🔥 6</div>
+        <div class="summary-sub">days consecutive</div>
+        <div class="summary-bar"><div class="summary-bar-fill" style="width:85%;background:var(--green);"></div></div>
+      </div>
+    </div>
+
+    <!-- WEEK STRIP -->
+    <div class="week-strip">
+      <div class="week-nav">
+        <button class="week-btn">‹</button>
+        <div><div class="week-label">Week 2</div><div class="week-sub">19–25 May 2026</div></div>
+        <button class="week-btn">›</button>
+      </div>
+      <div class="week-days">
+        <div class="week-day has-done"><div class="day-name">Mon</div><div class="day-num">19</div><div class="day-dots"><div class="day-dot done"></div><div class="day-dot done"></div><div class="day-dot done"></div></div></div>
+        <div class="week-day has-done"><div class="day-name">Tue</div><div class="day-num">20</div><div class="day-dots"><div class="day-dot done"></div><div class="day-dot done"></div><div class="day-dot"></div></div></div>
+        <div class="week-day has-done"><div class="day-name">Wed</div><div class="day-num">21</div><div class="day-dots"><div class="day-dot done"></div><div class="day-dot"></div><div class="day-dot"></div></div></div>
+        <div class="week-day has-done"><div class="day-name">Thu</div><div class="day-num">22</div><div class="day-dots"><div class="day-dot done"></div><div class="day-dot done"></div><div class="day-dot"></div></div></div>
+        <div class="week-day today"><div class="day-name">Fri</div><div class="day-num">23</div><div class="day-dots"><div class="day-dot pending"></div><div class="day-dot pending"></div><div class="day-dot"></div></div></div>
+        <div class="week-day"><div class="day-name">Sat</div><div class="day-num">24</div><div class="day-dots"><div class="day-dot"></div><div class="day-dot"></div><div class="day-dot"></div></div></div>
+        <div class="week-day"><div class="day-name">Sun</div><div class="day-num">25</div><div class="day-dots"><div class="day-dot"></div><div class="day-dot"></div><div class="day-dot"></div></div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Week Progress</div>
+        <div class="week-progress-ring">
+          <svg width="52" height="52" viewBox="0 0 52 52">
+            <circle cx="26" cy="26" r="20" fill="none" stroke="#222" stroke-width="4"/>
+            <circle cx="26" cy="26" r="20" fill="none" stroke="#c9a84c" stroke-width="4" stroke-dasharray="125.7" stroke-dashoffset="52.8" stroke-linecap="round" transform="rotate(-90 26 26)"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--gold);">58%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
+      <div class="filter-chip" onclick="setFilter('writing',this)">Writing</div>
+      <div class="filter-chip f-research" onclick="setFilter('research',this)">Research</div>
+      <div class="filter-chip f-admin" onclick="setFilter('admin',this)">Admin</div>
+      <div class="filter-chip f-overdue" onclick="setFilter('overdue',this)">Overdue</div>
+      <div class="filter-chip" onclick="setFilter('done',this)">Completed</div>
+      <div class="filter-search">
+        <input type="text" placeholder="Search milestones..." oninput="searchMilestones(this.value)"/>
+      </div>
+    </div>
+
+    <!-- TRACKER GRID -->
+    <div class="tracker-grid">
+      <div>
+
+        <!-- OVERDUE -->
+        <div class="milestone-section">
+          <div class="section-header">
+            <div class="section-title" style="color:var(--red);">⚠ Overdue <span class="section-count" style="background:var(--red-dim);color:var(--red);">2</span></div>
+            <div class="section-action">Reschedule all →</div>
+          </div>
+
+          <div class="milestone-item overdue" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Submit conference abstract — AMRS 2026</div>
+              <div class="milestone-desc">Draft 300-word abstract on green synthesis methodology for African Materials Research Society</div>
+              <div class="milestone-meta">
+                <span class="m-tag writing">Writing</span>
+                <span class="m-tag publication">Publication</span>
+                <span class="m-due overdue">⚑ Was due 20 May</span>
+                <span class="m-priority high">High</span>
+              </div>
+              <div class="subtasks" onclick="event.stopPropagation()">
+                <div class="subtask done" onclick="toggleSubtask(this)"><div class="subtask-check">✓</div><span class="subtask-label">Research AMRS submission guidelines</span></div>
+                <div class="subtask done" onclick="toggleSubtask(this)"><div class="subtask-check">✓</div><span class="subtask-label">Draft abstract structure outline</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Write full 300-word abstract</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Get supervisor review before submitting</span></div>
+                <div class="subtask-add" onclick="addSubtask(this.parentElement)"><span>+ Add sub-task</span></div>
+              </div>
+            </div>
+            <div class="m-actions">
+              <button class="m-action-btn" onclick="event.stopPropagation();">Edit</button>
+              <button class="m-action-btn" onclick="event.stopPropagation();">Reschedule</button>
+            </div>
+          </div>
+
+          <div class="milestone-item overdue" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Book advisor meeting with Prof. Mensah</div>
+              <div class="milestone-desc">Schedule monthly check-in and prepare pre-meeting agenda in Advisor CRM</div>
+              <div class="milestone-meta">
+                <span class="m-tag admin">Admin</span>
+                <span class="m-due overdue">⚑ Was due 21 May</span>
+                <span class="m-priority medium">Medium</span>
+                <span class="m-advisor-link" onclick="event.stopPropagation();alert('Opening Advisor CRM for Prof. Mensah...')">⊞ Open in Advisor CRM →</span>
+              </div>
+              <div class="subtasks" onclick="event.stopPropagation()">
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Log last meeting notes in CRM</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Generate auto-agenda from milestone progress</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Send meeting invite</span></div>
+                <div class="subtask-add" onclick="addSubtask(this.parentElement)"><span>+ Add sub-task</span></div>
+              </div>
+            </div>
+            <div class="m-actions">
+              <button class="m-action-btn" onclick="event.stopPropagation();">Edit</button>
+              <button class="m-action-btn" onclick="event.stopPropagation();">Reschedule</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- THIS WEEK -->
+        <div class="milestone-section" style="margin-top:1.2rem;">
+          <div class="section-header">
+            <div class="section-title">This Week <span class="section-count">5</span></div>
+            <div class="section-action" onclick="openModal()">+ Add to week</div>
+          </div>
+
+          <div class="milestone-group-header"><span>In Progress</span><span style="color:var(--gold);">3 remaining</span></div>
+
+          <div class="milestone-item urgent" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Draft methodology chapter outline (500 words)</div>
+              <div class="milestone-desc">Structure sections 3.1–3.4: synthesis parameters, characterisation, data analysis plan</div>
+              <div class="milestone-meta">
+                <span class="m-tag writing">Writing</span>
+                <span class="m-due today">Due today</span>
+                <span class="m-priority high">High</span>
+              </div>
+              <div class="m-progress">
+                <div class="m-progress-row">
+                  <div class="m-progress-track"><div class="m-progress-fill" style="width:44%;"></div></div>
+                  <span class="m-progress-pct">218 / 500 words</span>
+                </div>
+              </div>
+              <div class="subtasks" onclick="event.stopPropagation()">
+                <div class="subtask done" onclick="toggleSubtask(this)"><div class="subtask-check">✓</div><span class="subtask-label">Outline 3.1 — Synthesis parameters</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Draft 3.2 — Characterisation methods</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Draft 3.3 — Data analysis plan</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Write connecting transitions</span></div>
+                <div class="subtask-add" onclick="addSubtask(this.parentElement)"><span>+ Add sub-task</span></div>
+              </div>
+            </div>
+            <div class="m-actions">
+              <button class="m-action-btn" onclick="event.stopPropagation();alert('Opening micro-drafting workspace...')">Open</button>
+              <button class="m-action-btn" onclick="event.stopPropagation();">Edit</button>
+            </div>
+          </div>
+
+          <div class="milestone-item" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Attend virtual seminar — Systematic Review Methods</div>
+              <div class="milestone-meta">
+                <span class="m-tag research">Research</span>
+                <span class="m-due">Due Sat 24 May</span>
+                <span class="m-priority medium">Medium</span>
+              </div>
+              <div class="subtasks" onclick="event.stopPropagation()">
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Register for seminar</span></div>
+                <div class="subtask" onclick="toggleSubtask(this)"><div class="subtask-check"></div><span class="subtask-label">Take structured notes during session</span></div>
+                <div class="subtask-add" onclick="addSubtask(this.parentElement)"><span>+ Add sub-task</span></div>
+              </div>
+            </div>
+            <div class="m-actions"><button class="m-action-btn" onclick="event.stopPropagation();">Edit</button></div>
+          </div>
+
+          <div class="milestone-item" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Apply for UG Internal Research Equipment Grant</div>
+              <div class="milestone-meta">
+                <span class="m-tag admin">Admin</span>
+                <span class="m-tag publication">Grant</span>
+                <span class="m-due">Due 28 May</span>
+                <span class="m-priority medium">Medium</span>
+              </div>
+            </div>
+            <div class="m-actions"><button class="m-action-btn" onclick="event.stopPropagation();">Start →</button></div>
+          </div>
+
+          <div class="milestone-group-header" style="border-top:1px solid var(--border);"><span>Completed This Week</span><span style="color:var(--green);">2 done ✓</span></div>
+
+          <div class="milestone-item done" onclick="toggleDone(this)">
+            <div class="m-check">✓</div>
+            <div class="m-content">
+              <div class="milestone-title">Complete literature review gap analysis section</div>
+              <div class="milestone-meta"><span class="m-tag writing">Writing</span><span class="m-due">Done Mon</span></div>
+            </div>
+          </div>
+
+          <div class="milestone-item done" onclick="toggleDone(this)">
+            <div class="m-check">✓</div>
+            <div class="m-content">
+              <div class="milestone-title">Set up Zotero library with 40 core papers tagged by theme</div>
+              <div class="milestone-meta"><span class="m-tag research">Research</span><span class="m-due">Done Tue</span></div>
+            </div>
+          </div>
+
+          <div class="add-milestone-row">
+            <input class="add-input" type="text" placeholder="Quick-add a milestone..." onkeydown="if(event.key==='Enter')quickAdd(this)"/>
+            <button class="add-submit" onclick="quickAdd(document.querySelector('.add-input'))">Add</button>
+          </div>
+        </div>
+
+        <!-- UPCOMING -->
+        <div class="milestone-section" style="margin-top:1.2rem;">
+          <div class="section-header">
+            <div class="section-title">Upcoming <span class="section-count">4</span></div>
+            <div class="section-action">View full phase map →</div>
+          </div>
+          <div class="milestone-item" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Complete Section 2.2 — Research Gap Analysis (full draft)</div>
+              <div class="milestone-meta"><span class="m-tag writing">Writing</span><span class="m-due">Due 1 Jun</span><span class="m-priority high">High</span></div>
+            </div>
+          </div>
+          <div class="milestone-item" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Identify 3 potential co-authors via Peer Grid</div>
+              <div class="milestone-meta"><span class="m-tag research">Research</span><span class="m-due">Due 5 Jun</span><span class="m-priority medium">Medium</span></div>
+            </div>
+          </div>
+          <div class="milestone-item" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Begin Section 2.3 — Theoretical Framework outline</div>
+              <div class="milestone-meta"><span class="m-tag writing">Writing</span><span class="m-due">Due 8 Jun</span><span class="m-priority medium">Medium</span></div>
+            </div>
+          </div>
+          <div class="milestone-item" onclick="toggleDone(this)">
+            <div class="m-check"></div>
+            <div class="m-content">
+              <div class="milestone-title">Export systematic review draft for supervisor review</div>
+              <div class="milestone-meta">
+                <span class="m-tag writing">Writing</span>
+                <span class="m-tag publication">Publication</span>
+                <span class="m-due">Due 15 Jun</span>
+                <span class="m-priority high">High</span>
+                <span class="m-advisor-link" onclick="event.stopPropagation();alert('Linking to Prof. Mensah in Advisor CRM...')">⊞ Link to Prof. Mensah</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="right-panel">
+
+        <!-- Duo Partner Visibility -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">Kwame's Milestones This Week</div>
+            <div class="panel-action" style="color:var(--blue);">Message →</div>
+          </div>
+          <div class="panel-body">
+            <div class="duo-visibility">
+              <div class="duo-avatar-xs">K</div>
+              <div class="duo-vis-info">
+                <div class="duo-vis-name">Kwame Asante</div>
+                <div class="duo-vis-status">Week 2 Partner · Active 2 hrs ago</div>
+              </div>
+            </div>
+            <div class="duo-milestone-list">
+              <div class="duo-milestone-item done"><div class="duo-check-sm">✓</div><span>Set up Python data analysis environment</span></div>
+              <div class="duo-milestone-item done"><div class="duo-check-sm">✓</div><span>Complete ML model literature review section</span></div>
+              <div class="duo-milestone-item"><div class="duo-check-sm"></div><span>Draft visualisation script for nanoparticle data</span><button class="duo-nudge-sm" onclick="event.stopPropagation();this.textContent='✓ Sent';this.style.color='var(--blue)';">Nudge</button></div>
+              <div class="duo-milestone-item"><div class="duo-check-sm"></div><span>Attend co-working session Friday</span></div>
+            </div>
+            <div style="margin-top:0.8rem;font-size:0.72rem;color:var(--muted);line-height:1.6;">Kwame is 2/4 done — you're ahead this week. One nudge could help close the gap before Monday.</div>
+          </div>
+        </div>
+
+        <!-- Phase Milestone Map -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">Phase 1 Milestone Map</div>
+            <div class="panel-action">View all →</div>
+          </div>
+          <div class="panel-body">
+            <div class="phase-map">
+              <div class="phase-map-item">
+                <div class="phase-map-dot done"></div>
+                <div style="flex:1;padding-bottom:1rem;">
+                  <div class="phase-map-title done">Set up research workspace & tools</div>
+                  <div class="phase-map-meta">Done · Week 1</div>
+                </div>
+              </div>
+              <div class="phase-map-item">
+                <div class="phase-map-dot done"></div>
+                <div style="flex:1;padding-bottom:1rem;">
+                  <div class="phase-map-title done">Build Zotero library — 40 papers</div>
+                  <div class="phase-map-meta">Done · Week 2</div>
+                </div>
+              </div>
+              <div class="phase-map-item">
+                <div class="phase-map-dot active"></div>
+                <div style="flex:1;padding-bottom:1rem;">
+                  <div class="phase-map-title">Draft Chapter 2 — Literature Review</div>
+                  <div class="phase-map-meta" style="color:var(--gold);">In progress · 44%</div>
+                </div>
+              </div>
+              <div class="phase-map-item">
+                <div class="phase-map-dot"></div>
+                <div style="flex:1;padding-bottom:1rem;">
+                  <div class="phase-map-title">Submit systematic review abstract</div>
+                  <div class="phase-map-meta">Due · Week 4</div>
+                </div>
+              </div>
+              <div class="phase-map-item">
+                <div class="phase-map-dot"></div>
+                <div style="flex:1;padding-bottom:1rem;">
+                  <div class="phase-map-title">Complete methodology chapter outline</div>
+                  <div class="phase-map-meta">Due · Week 5</div>
+                </div>
+              </div>
+              <div class="phase-map-item">
+                <div class="phase-map-dot"></div>
+                <div style="flex:1;">
+                  <div class="phase-map-title">Phase 1 completion review with cohort</div>
+                  <div class="phase-map-meta">Due · Week 8</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Streak Calendar -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div class="panel-title">Activity Streak — May 2026</div>
+            <div class="panel-action" style="color:var(--green);">🔥 6 days</div>
+          </div>
+          <div class="panel-body">
+            <div class="streak-day-labels">
+              <div class="streak-day-label">M</div><div class="streak-day-label">T</div><div class="streak-day-label">W</div>
+              <div class="streak-day-label">T</div><div class="streak-day-label">F</div><div class="streak-day-label">S</div><div class="streak-day-label">S</div>
+            </div>
+            <div class="streak-cal" id="streakCal"></div>
+            <div class="streak-legend">
+              <span>Less</span>
+              <div class="streak-legend-dots">
+                <div class="streak-legend-dot" style="background:var(--border2);"></div>
+                <div class="streak-legend-dot" style="background:rgba(201,168,76,0.2);"></div>
+                <div class="streak-legend-dot" style="background:rgba(201,168,76,0.5);"></div>
+                <div class="streak-legend-dot" style="background:var(--gold);"></div>
+              </div>
+              <span>More</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Smart Insights -->
+        <div class="panel-card">
+          <div class="panel-header"><div class="panel-title">Smart Insights</div></div>
+          <div class="panel-body">
+            <div class="insight-list">
+              <div class="insight-item warn"><div class="insight-icon">⚠</div><div class="insight-text"><strong>2 overdue milestones</strong> — the conference abstract is 3 days late. Reschedule today before it compounds.</div></div>
+              <div class="insight-item good"><div class="insight-icon">✦</div><div class="insight-text"><strong>6-day writing streak</strong> — top 20% of cohort. One more day hits your personal best.</div></div>
+              <div class="insight-item tip"><div class="insight-icon">💡</div><div class="insight-text"><strong>Lit review at 44%.</strong> At 60% the platform flags it as ready to convert to a Systematic Review submission.</div></div>
+              <div class="insight-item tip"><div class="insight-icon">🎯</div><div class="insight-text"><strong>On pace for Phase 1 completion</strong> — 4 milestones/week puts you 2 weeks ahead of your target date.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Milestone Templates -->
+        <div class="panel-card" id="templatePanel" style="display:none;">
+          <div class="panel-header">
+            <div class="panel-title">Phase 1 Templates</div>
+            <div class="panel-action" onclick="hideTemplates()">Close ×</div>
+          </div>
+          <div class="panel-body">
+            <div style="font-size:0.75rem;color:var(--muted2);margin-bottom:1rem;line-height:1.6;">Common Phase 1 milestone bundles. Click to add to your tracker instantly.</div>
+            <div class="template-list">
+              <div class="template-item" onclick="applyTemplate('lit-review')">
+                <div class="template-icon">📚</div>
+                <div class="template-info">
+                  <div class="template-name">Literature Review Bundle</div>
+                  <div class="template-count">6 milestones · 3 weeks</div>
+                </div>
+                <div class="template-add">+ Add</div>
+              </div>
+              <div class="template-item" onclick="applyTemplate('supervisor')">
+                <div class="template-icon">👤</div>
+                <div class="template-info">
+                  <div class="template-name">Supervisor Management Setup</div>
+                  <div class="template-count">4 milestones · CRM linked</div>
+                </div>
+                <div class="template-add">+ Add</div>
+              </div>
+              <div class="template-item" onclick="applyTemplate('conference')">
+                <div class="template-icon">🎤</div>
+                <div class="template-info">
+                  <div class="template-name">Conference Abstract Pipeline</div>
+                  <div class="template-count">5 milestones · 2 weeks</div>
+                </div>
+                <div class="template-add">+ Add</div>
+              </div>
+              <div class="template-item" onclick="applyTemplate('grant')">
+                <div class="template-icon">💰</div>
+                <div class="template-info">
+                  <div class="template-name">Internal Grant Application</div>
+                  <div class="template-count">4 milestones · deadline-tracked</div>
+                </div>
+                <div class="template-add">+ Add</div>
+              </div>
+              <div class="template-item" onclick="applyTemplate('writing')">
+                <div class="template-icon">✍️</div>
+                <div class="template-info">
+                  <div class="template-name">Daily Writing Habit Builder</div>
+                  <div class="template-count">7 milestones · streak-linked</div>
+                </div>
+                <div class="template-add">+ Add</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- CELEBRATION TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon" id="toastIcon">🎉</div>
+  <div class="toast-text">
+    <strong id="toastTitle">Milestone Complete</strong>
+    <span id="toastMsg">Keep the momentum going.</span>
+  </div>
+</div>
+
+<!-- ADD MILESTONE MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Milestone</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label class="modal-label">Milestone Title</label>
+        <input class="modal-input" type="text" placeholder="What do you need to accomplish?"/>
+      </div>
+      <div>
+        <label class="modal-label">Description</label>
+        <textarea class="modal-textarea" placeholder="Add context, notes, or acceptance criteria..."></textarea>
+      </div>
+      <div class="modal-row">
+        <div>
+          <label class="modal-label">Due Date</label>
+          <input class="modal-input" type="date" style="color-scheme:dark;"/>
+        </div>
+        <div>
+          <label class="modal-label">Priority</label>
+          <select class="modal-select"><option>High</option><option selected>Medium</option><option>Low</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="modal-label">Category</label>
+        <div class="modal-tag-row">
+          <div class="modal-tag sel-writing" onclick="toggleModalTag(this,'sel-writing')">Writing</div>
+          <div class="modal-tag" onclick="toggleModalTag(this,'sel-research')">Research</div>
+          <div class="modal-tag" onclick="toggleModalTag(this,'sel-admin')">Admin</div>
+          <div class="modal-tag" onclick="toggleModalTag(this,'sel-publication')">Publication</div>
+        </div>
+      </div>
+
+      <!-- Word count goal toggle -->
+      <div>
+        <label class="modal-label">Writing Milestone Settings</label>
+        <div class="word-count-toggle">
+          <label>This is a word count milestone</label>
+          <label class="toggle-sm">
+            <input type="checkbox" id="wordCountToggle" onchange="toggleWordCount(this)"/>
+            <div class="toggle-sm-slider"></div>
+          </label>
+        </div>
+        <div class="word-count-field" id="wordCountField" style="display:none;margin-top:0.5rem;">
+          <input class="modal-input" type="number" placeholder="Target word count (e.g. 500)" min="50" max="50000"/>
+        </div>
+      </div>
+
+      <!-- Sub-tasks -->
+      <div>
+        <label class="modal-label">Sub-Tasks</label>
+        <div class="modal-subtasks" id="modalSubtasks">
+          <div class="modal-subtask-row">
+            <input class="modal-subtask-input" type="text" placeholder="e.g. Draft outline"/>
+            <button class="modal-subtask-del" onclick="this.parentElement.remove()">×</button>
+          </div>
+        </div>
+        <button class="modal-add-subtask" onclick="addModalSubtask()">+ Add Sub-task</button>
+      </div>
+
+      <!-- Advisor link -->
+      <div>
+        <label class="modal-label">Link to Advisor CRM</label>
+        <div class="advisor-link-toggle">
+          <div class="advisor-link-info">
+            <span>Link this milestone to a supervisor</span>
+            <small>Creates a shared item in your Advisor CRM meeting agenda</small>
+          </div>
+          <label class="toggle-sm">
+            <input type="checkbox" id="advisorToggle" onchange="toggleAdvisorSelect(this)"/>
+            <div class="toggle-sm-slider"></div>
+          </label>
+        </div>
+        <select class="modal-select" id="advisorSelect" style="display:none;margin-top:0.5rem;">
+          <option>Prof. Mensah — Primary Supervisor</option>
+          <option>Dr. Owusu — Co-Supervisor</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="modal-label">Link to Phase Milestone</label>
+        <select class="modal-select">
+          <option>— Standalone milestone</option>
+          <option>Draft Chapter 2 — Literature Review</option>
+          <option>Submit systematic review abstract</option>
+          <option>Complete methodology chapter outline</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="addMilestone()">Add Milestone →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let doneCount = 0;
+  const celebrations = [
+    { icon: '🔥', title: 'Streak Extended!', msg: 'You\'re on a roll. Don\'t stop now.' },
+    { icon: '✦', title: 'Milestone Complete', msg: 'One step closer to Phase 2.' },
+    { icon: '⚡', title: 'Progress Made', msg: 'Kwame just got notified. Keep pushing.' },
+    { icon: '🎯', title: 'On Target', msg: 'You\'re ahead of pace this week.' },
+    { icon: '📈', title: 'CV Index +1', msg: 'Another milestone toward your competitiveness score.' },
+  ];
+
+  function toggleDone(item) {
+    item.classList.toggle('done');
+    const check = item.querySelector('.m-check');
+    if (item.classList.contains('done')) {
+      check.textContent = '✓';
+      item.classList.add('celebrating');
+      setTimeout(() => item.classList.remove('celebrating'), 600);
+      showToast();
+    } else {
+      check.textContent = '';
+    }
+  }
+
+  function showToast() {
+    doneCount++;
+    const c = celebrations[doneCount % celebrations.length];
+    document.getElementById('toastIcon').textContent = c.icon;
+    document.getElementById('toastTitle').textContent = c.title;
+    document.getElementById('toastMsg').textContent = c.msg;
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }
+
+  function toggleSubtask(el) {
+    el.classList.toggle('done');
+    el.querySelector('.subtask-check').textContent = el.classList.contains('done') ? '✓' : '';
+  }
+
+  function addSubtask(container) {
+    const addBtn = container.querySelector('.subtask-add');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'subtask-inline-input';
+    input.placeholder = 'New sub-task...';
+    input.onkeydown = function(e) {
+      if (e.key === 'Enter' && this.value.trim()) {
+        const sub = document.createElement('div');
+        sub.className = 'subtask';
+        sub.onclick = function() { toggleSubtask(this); };
+        sub.innerHTML = `<div class="subtask-check"></div><span class="subtask-label">${this.value.trim()}</span>`;
+        container.insertBefore(sub, addBtn);
+        this.remove();
+      }
+      if (e.key === 'Escape') this.remove();
+    };
+    container.insertBefore(input, addBtn);
+    input.focus();
+  }
+
+  function quickAdd(input) {
+    const val = input.value.trim();
+    if (!val) return;
+    const list = document.querySelectorAll('.milestone-group-header');
+    const targetSection = list[1]?.closest('.milestone-section');
+    if (!targetSection) return;
+    const addRow = targetSection.querySelector('.add-milestone-row');
+    const item = document.createElement('div');
+    item.className = 'milestone-item';
+    item.style.animation = 'fadeUp 0.4s ease';
+    item.innerHTML = `<div class="m-check"></div><div class="m-content"><div class="milestone-title">${val}</div><div class="milestone-meta"><span class="m-tag writing">Writing</span><span class="m-due">Added now</span></div></div>`;
+    item.onclick = function() { toggleDone(this); };
+    addRow.parentElement.insertBefore(item, addRow);
+    input.value = '';
+  }
+
+  function setFilter(type, el) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  function searchMilestones(val) {
+    document.querySelectorAll('.milestone-item').forEach(item => {
+      const title = item.querySelector('.milestone-title');
+      if (!title) return;
+      item.style.display = title.textContent.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+    });
+  }
+
+  function openModal() { document.getElementById('modalOverlay').classList.add('open'); }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+  function closeModalOnOverlay(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+  function addMilestone() { closeModal(); }
+
+  function toggleWordCount(cb) {
+    document.getElementById('wordCountField').style.display = cb.checked ? 'block' : 'none';
+  }
+
+  function toggleAdvisorSelect(cb) {
+    document.getElementById('advisorSelect').style.display = cb.checked ? 'block' : 'none';
+  }
+
+  function toggleModalTag(el, cls) {
+    const allCls = ['sel-writing','sel-research','sel-admin','sel-publication'];
+    allCls.forEach(c => el.classList.remove(c));
+    if (!el.classList.contains(cls)) el.classList.add(cls);
+  }
+
+  function addModalSubtask() {
+    const container = document.getElementById('modalSubtasks');
+    const row = document.createElement('div');
+    row.className = 'modal-subtask-row';
+    row.innerHTML = `<input class="modal-subtask-input" type="text" placeholder="Sub-task..."/><button class="modal-subtask-del" onclick="this.parentElement.remove()">×</button>`;
+    container.appendChild(row);
+    row.querySelector('input').focus();
+  }
+
+  function showTemplates() {
+    const panel = document.getElementById('templatePanel');
+    panel.style.display = panel.style.display === 'none' ? '' : 'none';
+  }
+
+  function hideTemplates() {
+    document.getElementById('templatePanel').style.display = 'none';
+  }
+
+  function applyTemplate(type) {
+    const names = {
+      'lit-review': 'Literature Review Bundle (6 milestones)',
+      'supervisor': 'Supervisor Management Setup (4 milestones)',
+      'conference': 'Conference Abstract Pipeline (5 milestones)',
+      'grant': 'Internal Grant Application (4 milestones)',
+      'writing': 'Daily Writing Habit Builder (7 milestones)',
+    };
+    alert(`Template applied: ${names[type]}\n\nMilestones added to your tracker with suggested due dates.`);
+    hideTemplates();
+  }
+
+  // Build streak calendar
+  function buildStreak() {
+    const cal = document.getElementById('streakCal');
+    const levels = [0,0,1,2,1,0,0, 0,1,2,3,2,1,0, 1,2,3,3,2,1,0, 1,3,3,3,4,3,4, 4,4];
+    levels.forEach((level, i) => {
+      const cell = document.createElement('div');
+      cell.className = 'streak-cell';
+      if (i + 1 === 23) cell.classList.add('today');
+      if (i >= 23) cell.classList.add('empty');
+      else if (level === 0) cell.classList.add('empty');
+      else if (level === 1) cell.classList.add('low');
+      else if (level === 2) cell.classList.add('mid');
+      else cell.classList.add('high');
+      cell.title = `May ${i+1}`;
+      cal.appendChild(cell);
+    });
+  }
+  buildStreak();
+</script>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo</span>
+    <a href="index.html" class="dnav-link">Home</a>
+    <a href="academic-engine-landing.html" class="dnav-link">Landing</a>
+    <a href="academic-engine-onboarding.html" class="dnav-link">Onboarding</a>
+    <a href="academic-engine-dashboard.html" class="dnav-link">Dashboard</a>
+    <a href="academic-engine-milestones.html" class="dnav-link">Milestones</a>
+    <a href="academic-engine-sprint.html" class="dnav-link">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" class="dnav-link">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem 0.5rem;margin-left:0.2rem;">✕</button>
+  </div>
+  <style>
+    .dnav-link { font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s; }
+    .dnav-link:hover { border-color:#c9a84c;color:#c9a84c; }
+  </style>
+
+</body>
+</html>

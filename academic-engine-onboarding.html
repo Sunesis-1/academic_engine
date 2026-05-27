@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine — Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808; --deep: #0e0e0e; --card: #141414; --border: #222; --border2: #2a2a2a;
+      --gold: #c9a84c; --gold-light: #e8c87a; --gold-dim: rgba(201,168,76,0.12);
+      --cream: #f5f0e8; --muted: #555; --muted2: #777; --text: #d0cbc3;
+      --green: #4caf7d; --blue: #5c8fe0; --red: #e05c5c; --purple: #9c6ee0;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; }
+    .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; z-index: 0; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%); }
+
+    /* PROGRESS BAR */
+    .progress-bar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(8,8,8,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 3rem; display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
+    .progress-logo { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+    .progress-steps { display: flex; align-items: center; gap: 0; flex: 1; max-width: 520px; }
+    .progress-step { display: flex; align-items: center; flex: 1; }
+    .step-dot { width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); transition: all 0.3s; flex-shrink: 0; background: var(--card); }
+    .step-dot.done { border-color: var(--green); background: rgba(76,175,125,0.1); color: var(--green); }
+    .step-dot.active { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); box-shadow: 0 0 12px rgba(201,168,76,0.2); }
+    .step-line { flex: 1; height: 1px; background: var(--border2); transition: background 0.3s; }
+    .step-line.done { background: var(--green); }
+    .progress-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
+
+    /* MAIN */
+    .onboarding { min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 8rem 2rem 5rem; position: relative; z-index: 1; }
+    .step-container { width: 100%; max-width: 700px; }
+    @keyframes stepIn { from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);} }
+
+    /* SHARED STEP STYLES */
+    .step-eyebrow { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.25em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .step-eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+    .step-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 900; color: var(--cream); line-height: 1.05; margin-bottom: 1rem; }
+    .step-title em { font-style: italic; color: var(--gold); }
+    .step-subtitle { font-size: 0.95rem; color: var(--muted2); line-height: 1.7; margin-bottom: 2rem; max-width: 560px; }
+
+    /* FORM */
+    .form-group { margin-bottom: 1.3rem; }
+    .form-label { display: block; font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem; }
+    .form-input, .form-select, .form-textarea { width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.85rem 1rem; outline: none; transition: border-color 0.2s; appearance: none; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); }
+    .form-textarea { min-height: 80px; resize: vertical; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .form-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.4rem; font-style: italic; }
+    .form-section-divider { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding: 1.2rem 0 0.8rem; border-top: 1px solid var(--border); margin-top: 0.5rem; }
+
+    /* PHASE SELECTOR */
+    .phase-selector { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); margin-bottom: 1.3rem; }
+    .phase-option { background: var(--card); padding: 1.1rem; cursor: pointer; transition: all 0.15s; border: 2px solid transparent; text-align: center; }
+    .phase-option:hover { background: var(--deep); }
+    .phase-option.selected { background: var(--gold-dim); border-color: var(--gold); }
+    .phase-option-number { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.3rem; opacity: 0.7; }
+    .phase-option-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--cream); font-weight: 700; margin-bottom: 0.2rem; }
+    .phase-option-desc { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+    .phase-option.selected .phase-option-name { color: var(--gold); }
+
+    /* KEYWORD TAGS */
+    .tag-input-wrap { display: flex; gap: 0.5rem; }
+    .tag-input-wrap .form-input { flex: 1; }
+    .tag-add-btn { padding: 0 1rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .tag-add-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .tags-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; min-height: 1.5rem; }
+    .tag-chip { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.7rem; background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.3); font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; color: var(--gold); }
+    .tag-chip button { background: none; border: none; color: var(--gold); cursor: pointer; font-size: 0.8rem; padding: 0; line-height: 1; opacity: 0.6; transition: opacity 0.2s; }
+    .tag-chip button:hover { opacity: 1; }
+
+    /* SKILLS & GAPS MATRIX */
+    .matrix-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); margin-bottom: 1.3rem; }
+    .matrix-col { background: var(--card); padding: 1.2rem; }
+    .matrix-col-header { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .matrix-col-header.bring { color: var(--green); }
+    .matrix-col-header.need { color: var(--blue); }
+    .matrix-col-header::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .matrix-col-header.bring::before { background: var(--green); }
+    .matrix-col-header.need::before { background: var(--blue); }
+    .skill-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.8rem; }
+    .skill-chip { padding: 0.3rem 0.7rem; border: 1px solid var(--border2); background: transparent; font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.08em; color: var(--muted2); cursor: pointer; transition: all 0.15s; }
+    .skill-chip:hover { border-color: var(--border); color: var(--text); }
+    .skill-chip.selected-bring { border-color: rgba(76,175,125,0.4); background: rgba(76,175,125,0.08); color: var(--green); }
+    .skill-chip.selected-need { border-color: rgba(92,143,224,0.4); background: rgba(92,143,224,0.08); color: var(--blue); }
+    .matrix-custom-input { width: 100%; background: var(--deep); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; padding: 0.6rem 0.8rem; outline: none; margin-top: 0.4rem; }
+    .matrix-custom-input:focus { border-color: var(--gold); }
+    .matrix-hint { font-size: 0.68rem; color: var(--muted); margin-top: 0.5rem; font-style: italic; line-height: 1.5; }
+
+    /* GOAL SLIDERS */
+    .goals-grid { display: flex; flex-direction: column; gap: 1rem; }
+    .goal-item { background: var(--card); border: 1px solid var(--border); padding: 1.3rem 1.5rem; transition: border-color 0.2s; }
+    .goal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.8rem; gap: 1rem; }
+    .goal-name { font-size: 0.88rem; color: var(--cream); font-weight: 500; }
+    .goal-why { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; font-style: italic; line-height: 1.5; }
+    .goal-value-display { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: var(--gold); white-space: nowrap; text-align: right; flex-shrink: 0; min-width: 60px; }
+    .goal-value-unit { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--muted); display: block; text-align: right; letter-spacing: 0.08em; }
+    .goal-slider { width: 100%; height: 4px; appearance: none; background: var(--border2); border-radius: 2px; outline: none; cursor: pointer; margin-bottom: 0.5rem; }
+    .goal-slider::-webkit-slider-thumb { appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--gold); border: 2px solid var(--black); cursor: pointer; }
+    .goal-range-labels { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 0.53rem; color: var(--muted); }
+    .goal-insight { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.6rem; font-size: 0.7rem; color: var(--green); line-height: 1.5; }
+    .goal-insight::before { content: '✦'; font-size: 0.6rem; flex-shrink: 0; }
+    .toggle-switch { position: relative; width: 42px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--border2); border-radius: 22px; cursor: pointer; transition: background 0.3s; }
+    .toggle-slider::before { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: all 0.3s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--gold); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--black); }
+
+    /* GOAL SUMMARY */
+    .goal-summary-box { background: var(--deep); border: 1px solid var(--border); border-top: 2px solid var(--gold); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .goal-summary-title { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+    .goal-summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); }
+    .goal-summary-item { background: var(--card); padding: 0.9rem; text-align: center; }
+    .goal-summary-val { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+    .goal-summary-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 0.2rem; }
+    .goal-summary-toggles { display: flex; gap: 0.6rem; margin-top: 1rem; flex-wrap: wrap; }
+    .goal-toggle-chip { padding: 0.3rem 0.8rem; font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; border: 1px solid; }
+    .goal-toggle-chip.on { border-color: rgba(76,175,125,0.4); color: var(--green); background: rgba(76,175,125,0.08); }
+    .goal-toggle-chip.off { border-color: var(--border2); color: var(--muted); }
+
+    /* COMMITMENT */
+    .commitment-scroll { background: var(--card); border: 1px solid var(--border); padding: 1.8rem; margin-bottom: 1.5rem; max-height: 260px; overflow-y: auto; }
+    .commitment-scroll::-webkit-scrollbar { width: 3px; }
+    .commitment-scroll::-webkit-scrollbar-thumb { background: var(--gold); }
+    .commitment-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--cream); font-weight: 700; margin-bottom: 1.2rem; }
+    .commitment-clause { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .commitment-clause:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .clause-num { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--gold); letter-spacing: 0.1em; flex-shrink: 0; margin-top: 0.2rem; }
+    .clause-text { font-size: 0.82rem; color: var(--text); line-height: 1.7; }
+    .clause-text strong { color: var(--cream); }
+    .sign-row { display: flex; align-items: flex-start; gap: 1rem; padding: 1.2rem 1.5rem; background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.25); margin-bottom: 1.2rem; }
+    .sign-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gold); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+    .sign-row label { font-size: 0.82rem; color: var(--cream); cursor: pointer; line-height: 1.6; }
+    .signature-field { width: 100%; background: var(--card); border: 1px solid var(--border); border-bottom: 2px solid var(--gold); color: var(--cream); font-family: 'Playfair Display', serif; font-size: 1.2rem; font-style: italic; padding: 0.8rem 1rem; outline: none; }
+    .signature-field::placeholder { color: var(--muted); }
+
+    /* MATCH REVEAL */
+    .match-animation { position: relative; width: 180px; height: 180px; margin: 0 auto 2rem; }
+    .match-ring-outer { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(201,168,76,0.2); animation: rotate-slow 8s linear infinite; }
+    .match-ring-outer::before { content: '✦'; position: absolute; top: -6px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--gold); }
+    @keyframes rotate-slow { from{transform:rotate(0deg);}to{transform:rotate(360deg);} }
+    .match-ring-inner { position: absolute; inset: 18px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.12); animation: rotate-slow 5s linear infinite reverse; }
+    .match-avatar-large { position: absolute; inset: 38px; border-radius: 50%; background: linear-gradient(135deg,#5c8fe0,#2d5aa8); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 700; color: white; box-shadow: 0 0 40px rgba(92,143,224,0.25); }
+    .match-card { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); padding: 1.8rem; margin-bottom: 1.2rem; }
+    .match-card-header { display: flex; align-items: center; gap: 1.2rem; margin-bottom: 1.5rem; }
+    .match-avatar-sm { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg,#5c8fe0,#2d5aa8); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .match-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--cream); font-weight: 700; }
+    .match-dept { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; color: var(--blue); text-transform: uppercase; margin-top: 0.2rem; }
+    .match-why-row { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+    .match-why-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.7rem 1rem; background: var(--deep); border: 1px solid var(--border); }
+    .match-why-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); flex-shrink: 0; margin-top: 0.15rem; width: 60px; }
+    .match-why-label.green { color: var(--green); }
+    .match-why-label.blue { color: var(--blue); }
+    .match-why-item span { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+    .match-skills-swap { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.8rem; align-items: center; margin-bottom: 1.2rem; }
+    .match-skill-box { background: var(--deep); border: 1px solid var(--border); padding: 0.9rem 1rem; }
+    .match-skill-box-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .match-skill-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .match-skill-chip { font-family: 'DM Mono', monospace; font-size: 0.58rem; padding: 0.2rem 0.6rem; border: 1px solid; }
+    .match-skill-chip.you { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+    .match-skill-chip.them { border-color: rgba(92,143,224,0.3); color: var(--blue); }
+    .swap-arrow { font-size: 1.2rem; color: var(--gold); text-align: center; }
+    .match-message { background: var(--deep); border: 1px solid var(--border); border-left: 3px solid var(--blue); padding: 1rem 1.2rem; font-size: 0.82rem; color: var(--text); font-style: italic; line-height: 1.7; }
+    .match-message::before { content: '"'; font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--blue); line-height: 0; vertical-align: -0.3em; margin-right: 0.3rem; }
+    .match-actions { display: flex; gap: 0.8rem; margin-top: 1.2rem; }
+    .match-action-btn { flex: 1; padding: 0.8rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .match-action-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .match-action-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .match-action-btn.primary:hover { background: var(--gold-light); }
+
+    /* FIRST ACTIONS */
+    .first-actions { background: var(--card); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.2rem; }
+    .first-actions-title { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+    .action-checklist { display: flex; flex-direction: column; gap: 0.6rem; }
+    .action-check-item { display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 1rem; background: var(--deep); border: 1px solid var(--border); cursor: pointer; transition: border-color 0.15s; }
+    .action-check-item:hover { border-color: var(--border2); }
+    .action-check-item.checked { border-left: 2px solid var(--green); }
+    .action-num { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--gold); flex-shrink: 0; }
+    .action-text { font-size: 0.8rem; color: var(--cream); }
+    .action-tag { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.55rem; padding: 0.15rem 0.5rem; border: 1px solid; white-space: nowrap; flex-shrink: 0; }
+    .action-tag.today { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+    .action-tag.week { border-color: rgba(92,143,224,0.3); color: var(--blue); }
+
+    /* WELCOME STEP */
+    .welcome-card { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); padding: 1.8rem; margin-bottom: 1.5rem; }
+    .welcome-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); margin-top: 1.5rem; }
+    .welcome-stat { background: var(--deep); padding: 1.1rem; text-align: center; }
+    .welcome-stat-val { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); }
+    .welcome-stat-label { font-family: 'DM Mono', monospace; font-size: 0.53rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
+    .acceptance-badge { display: inline-flex; align-items: center; gap: 0.6rem; background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.3); padding: 0.5rem 1rem; margin-bottom: 1.5rem; font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--green); }
+
+    /* NAV */
+    .step-nav { display: flex; align-items: center; justify-content: space-between; margin-top: 2rem; gap: 1rem; }
+    .btn-next { font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--black); background: var(--gold); border: none; padding: 1rem 2.5rem; cursor: pointer; transition: all 0.2s; }
+    .btn-next:hover { background: var(--gold-light); transform: translateY(-2px); }
+    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn-back { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--border2); padding: 0.9rem 1.5rem; cursor: pointer; transition: all 0.2s; }
+    .btn-back:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-enter { font-family: 'DM Mono', monospace; font-size: 0.78rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--black); background: var(--gold); border: none; padding: 1.2rem 3rem; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 1rem; }
+    .btn-enter:hover { background: var(--gold-light); }
+
+    @media(max-width:640px){
+      .progress-bar{padding:1rem 1.2rem;} .progress-steps{display:none;} .form-row,.form-row-3{grid-template-columns:1fr;} .phase-selector{grid-template-columns:1fr;} .matrix-wrap{grid-template-columns:1fr;} .welcome-stats{grid-template-columns:1fr 1fr;} .step-nav{flex-direction:column-reverse;} .btn-back,.btn-next{width:100%;text-align:center;} .goal-summary-grid{grid-template-columns:1fr 1fr;} .match-skills-swap{grid-template-columns:1fr;} .swap-arrow{display:none;} .match-actions{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- PROGRESS BAR -->
+<div class="progress-bar">
+  <div class="progress-logo">The Academic Engine</div>
+  <div class="progress-steps">
+    <div class="progress-step"><div class="step-dot active" id="dot-1">1</div><div class="step-line" id="line-1"></div></div>
+    <div class="progress-step"><div class="step-dot" id="dot-2">2</div><div class="step-line" id="line-2"></div></div>
+    <div class="progress-step"><div class="step-dot" id="dot-3">3</div><div class="step-line" id="line-3"></div></div>
+    <div class="progress-step"><div class="step-dot" id="dot-4">4</div><div class="step-line" id="line-4"></div></div>
+    <div class="progress-step"><div class="step-dot" id="dot-5">5</div><div class="step-line" id="line-5" style="display:none;"></div></div>
+  </div>
+  <div class="progress-label" id="progressLabel">Step 1 of 5</div>
+</div>
+
+<div class="onboarding">
+<div class="step-container" id="stepContainer">
+
+<!-- ══════════════════════════════════════════ -->
+<!-- STEP 1: WELCOME                            -->
+<!-- ══════════════════════════════════════════ -->
+<div id="step-1">
+  <div class="acceptance-badge">✓ Application Accepted · Founding Cohort 2026</div>
+  <div class="step-eyebrow">Welcome to the Engine</div>
+  <div class="step-title">You made it,<br/><em>Scholar.</em></div>
+  <div class="step-subtitle">You're one of 20 researchers selected for the founding cohort. This 5-minute setup personalises your entire experience — your milestones, your resources, and your first accountability match.</div>
+
+  <div class="welcome-card">
+    <div style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;">What you're joining</div>
+    <div style="font-size:0.88rem;color:var(--text);line-height:1.8;">The Academic Engine is a structured research accelerator — not another app, not another group chat. A system built around how elite scholars finish their degrees and build global careers.</div>
+    <div class="welcome-stats">
+      <div class="welcome-stat"><div class="welcome-stat-val">20</div><div class="welcome-stat-label">Founding scholars</div></div>
+      <div class="welcome-stat"><div class="welcome-stat-val">3</div><div class="welcome-stat-label">Research phases</div></div>
+      <div class="welcome-stat"><div class="welcome-stat-val">∞</div><div class="welcome-stat-label">Network built</div></div>
+    </div>
+  </div>
+
+  <div style="background:var(--deep);border:1px solid var(--border);border-left:3px solid var(--gold);padding:1.1rem 1.4rem;font-size:0.82rem;color:var(--text);line-height:1.7;margin-bottom:1rem;">
+    <strong style="color:var(--gold);font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;display:block;margin-bottom:0.4rem;">Before we begin</strong>
+    This setup takes 5 minutes. Be honest — especially about your skills and your gaps. The accuracy of your profile is what makes every match, every resource, and every opportunity genuinely relevant to you.
+  </div>
+
+  <div class="step-nav">
+    <div></div>
+    <button class="btn-next" onclick="goToStep(2)">Let's Begin →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- STEP 2: RESEARCH PROFILE + SKILLS & GAPS  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="step-2" style="display:none;">
+  <div class="step-eyebrow">Research Profile</div>
+  <div class="step-title">Tell us about<br/>your <em>research.</em></div>
+  <div class="step-subtitle">This builds your profile, powers your matched resources, and — most importantly — tells the algorithm what you bring and what you need for accurate partner matching.</div>
+
+  <!-- Personal -->
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">First Name</label>
+      <input class="form-input" type="text" id="firstName" placeholder="Your first name"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Last Name</label>
+      <input class="form-input" type="text" id="lastName" placeholder="Your last name"/>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">University</label>
+      <input class="form-input" type="text" id="university" placeholder="e.g. University of Ghana"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Country</label>
+      <input class="form-input" type="text" id="country" placeholder="e.g. Ghana"/>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Department / Faculty</label>
+      <input class="form-input" type="text" id="dept" placeholder="e.g. Biomedical Engineering"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Programme Level</label>
+      <select class="form-select" id="level">
+        <option value="" disabled selected>Select your level</option>
+        <option>MPhil — Year 1</option>
+        <option>MPhil — Year 2</option>
+        <option>PhD — Year 1</option>
+        <option>PhD — Year 2</option>
+        <option>PhD — Year 3</option>
+        <option>PhD — Year 4+</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Primary Supervisor Name</label>
+      <input class="form-input" type="text" id="supervisor" placeholder="e.g. Prof. Mensah"/>
+      <div class="form-hint">Used in your Advisor CRM — you can add more later</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Expected Completion</label>
+      <input class="form-input" type="month" id="completion" style="color-scheme:dark;"/>
+      <div class="form-hint">Used to pace your milestone targets</div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Working Research Title</label>
+    <input class="form-input" type="text" id="researchTitle" placeholder="e.g. Green Synthesis of ZnO Nanoparticles for Antibacterial Applications"/>
+    <div class="form-hint">Don't worry — this can evolve. We just need a direction.</div>
+  </div>
+
+  <!-- Phase -->
+  <div class="form-group">
+    <label class="form-label">Current Research Phase</label>
+    <div class="phase-selector">
+      <div class="phase-option selected" onclick="selectPhase(this,'1')">
+        <div class="phase-option-number">Phase 01</div>
+        <div class="phase-option-name">Foundation</div>
+        <div class="phase-option-desc">Lit review, proposal, early data</div>
+      </div>
+      <div class="phase-option" onclick="selectPhase(this,'2')">
+        <div class="phase-option-number">Phase 02</div>
+        <div class="phase-option-name">Cross-Pollination</div>
+        <div class="phase-option-desc">Data collection, conferences, collabs</div>
+      </div>
+      <div class="phase-option" onclick="selectPhase(this,'3')">
+        <div class="phase-option-number">Phase 03</div>
+        <div class="phase-option-name">Launch</div>
+        <div class="phase-option-desc">Writing up, submitting, publishing</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research Keywords -->
+  <div class="form-group">
+    <label class="form-label">Research Keywords</label>
+    <div class="tag-input-wrap">
+      <input class="form-input" type="text" id="keywordInput" placeholder="e.g. Nanomaterials" onkeydown="if(event.key==='Enter'){addTag();}"/>
+      <button class="tag-add-btn" onclick="addTag()">+ Add</button>
+    </div>
+    <div class="tags-list" id="tagsList">
+      <div class="tag-chip">Biomedical Engineering <button onclick="removeTag(this)">×</button></div>
+      <div class="tag-chip">Nanocoatings <button onclick="removeTag(this)">×</button></div>
+    </div>
+    <div class="form-hint">Powers your Opportunity Radar and resource feed. Add 3–5 keywords.</div>
+  </div>
+
+  <!-- SKILLS & GAPS MATRIX -->
+  <div class="form-section-divider">Skills & Gaps Matrix — Powers Partner Matching</div>
+  <div style="font-size:0.82rem;color:var(--muted2);line-height:1.7;margin-bottom:1.2rem;">Select what you can <strong style="color:var(--green)">bring</strong> to a collaboration and what you <strong style="color:var(--blue)">need</strong> from a partner. This is how the algorithm makes real matches — not just same-department pairings.</div>
+
+  <div class="matrix-wrap">
+    <!-- BRING -->
+    <div class="matrix-col">
+      <div class="matrix-col-header bring">What I Bring</div>
+      <div class="skill-chips" id="bringChips">
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Wet Lab / Synthesis</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Data Analysis</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Literature Review</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Grant Writing</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Field Research</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Statistical Methods</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Science Communication</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Lab Instrumentation</div>
+        <div class="skill-chip selected-bring" onclick="toggleSkill(this,'bring')">Experimental Design</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'bring')">Academic Writing</div>
+      </div>
+      <input class="matrix-custom-input" type="text" placeholder="+ Add your own skill..."/>
+      <div class="matrix-hint">Select all that apply. Be generous — even partial skills count.</div>
+    </div>
+    <!-- NEED -->
+    <div class="matrix-col">
+      <div class="matrix-col-header need">What I Need</div>
+      <div class="skill-chips" id="needChips">
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Computational Modeling</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Machine Learning / AI</div>
+        <div class="skill-chip selected-need" onclick="toggleSkill(this,'need')">Data Visualisation</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Qualitative Analysis</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Social Science Methods</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Programming (Python/R)</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Survey Design</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Bioinformatics</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Policy Analysis</div>
+        <div class="skill-chip" onclick="toggleSkill(this,'need')">Academic Writing</div>
+      </div>
+      <input class="matrix-custom-input" type="text" placeholder="+ Add what you need..."/>
+      <div class="matrix-hint">Be honest about gaps. This is how you get a genuinely useful match.</div>
+    </div>
+  </div>
+
+  <div style="background:var(--deep);border:1px solid var(--border);border-left:3px solid var(--green);padding:1rem 1.2rem;font-size:0.78rem;color:var(--muted2);line-height:1.7;margin-bottom:1rem;">
+    <strong style="color:var(--green);font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;display:block;margin-bottom:0.3rem;">How matching works</strong>
+    Your "need" is matched against another scholar's "bring" — and their "need" is matched against your "bring." A perfect match means both of you gain something the other provides. This matrix also powers the Interdisciplinary Peer Grid across the entire cohort.
+  </div>
+
+  <div class="step-nav">
+    <button class="btn-back" onclick="goToStep(1)">← Back</button>
+    <button class="btn-next" onclick="goToStep(3)">Continue →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- STEP 3: GUIDED GOALS                       -->
+<!-- ══════════════════════════════════════════ -->
+<div id="step-3" style="display:none;">
+  <div class="step-eyebrow">Guided Ambition</div>
+  <div class="step-title">Set your<br/><em>phase goals.</em></div>
+  <div class="step-subtitle">These are intelligent suggestions based on what Phase 1 scholars typically achieve. Adjust the intensity to your situation — the platform adapts everything around your targets.</div>
+
+  <div class="goals-grid">
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Weekly Writing Sessions</div>
+          <div class="goal-why">Daily writing builds momentum faster than any other habit in graduate research</div>
+        </div>
+        <div><div class="goal-value-display" id="val-writing">3</div><div class="goal-value-unit">per week</div></div>
+      </div>
+      <input type="range" class="goal-slider" id="sl-writing" min="1" max="7" value="3" oninput="updateGoal('writing',this.value,'per week')"/>
+      <div class="goal-range-labels"><span>1 (light)</span><span>3–4 (recommended)</span><span>7 (intensive)</span></div>
+      <div class="goal-insight">Scholars writing 3+ times weekly publish 4× faster than those writing once</div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Papers to Read per Month</div>
+          <div class="goal-why">A strong literature base in Phase 1 prevents expensive rework later</div>
+        </div>
+        <div><div class="goal-value-display" id="val-papers">10</div><div class="goal-value-unit">papers / month</div></div>
+      </div>
+      <input type="range" class="goal-slider" id="sl-papers" min="2" max="30" value="10" oninput="updateGoal('papers',this.value,'papers / month')"/>
+      <div class="goal-range-labels"><span>2 (minimal)</span><span>10 (standard)</span><span>30 (deep)</span></div>
+      <div class="goal-insight">10 papers/month builds a robust systematic review in 3 months</div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Weekly Milestones</div>
+          <div class="goal-why">Breaking work into milestones makes progress visible and kills procrastination</div>
+        </div>
+        <div><div class="goal-value-display" id="val-milestones">4</div><div class="goal-value-unit">per week</div></div>
+      </div>
+      <input type="range" class="goal-slider" id="sl-milestones" min="1" max="10" value="4" oninput="updateGoal('milestones',this.value,'per week')"/>
+      <div class="goal-range-labels"><span>1 (slow)</span><span>4 (standard)</span><span>10 (sprint)</span></div>
+      <div class="goal-insight">4 milestones/week keeps thesis completion on a 24-month track</div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Co-Working Sessions per Week</div>
+          <div class="goal-why">Shared writing sessions reduce isolation and double output compared to solo work</div>
+        </div>
+        <div><div class="goal-value-display" id="val-cowork">2</div><div class="goal-value-unit">per week</div></div>
+      </div>
+      <input type="range" class="goal-slider" id="sl-cowork" min="1" max="5" value="2" oninput="updateGoal('cowork',this.value,'per week')"/>
+      <div class="goal-range-labels"><span>1 (light)</span><span>2–3 (recommended)</span><span>5 (immersive)</span></div>
+      <div class="goal-insight">Scholars in 2+ sessions/week report 40% lower isolation scores</div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Weekly Partner Check-in Response</div>
+          <div class="goal-why">The accountability map only works if both partners show up. Your response rate affects your partner's momentum too.</div>
+        </div>
+        <div><div class="goal-value-display" id="val-checkin">24</div><div class="goal-value-unit">hr response</div></div>
+      </div>
+      <input type="range" class="goal-slider" id="sl-checkin" min="6" max="72" step="6" value="24" oninput="updateGoal('checkin',this.value,'hr response')"/>
+      <div class="goal-range-labels"><span>6 hrs (fast)</span><span>24 hrs (standard)</span><span>72 hrs (slow)</span></div>
+      <div class="goal-insight">Partners who respond within 24hrs have 2× higher cohort retention</div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Target a Conference Abstract This Phase</div>
+          <div class="goal-why">Phase 1 abstract submissions build your CV and put your name out early</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-conf" checked onchange="updateToggle('conf',this.checked)"/>
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+      <div class="goal-insight" id="insight-conf">Scholars who submit 1 abstract in Phase 1 report stronger momentum entering Phase 2</div>
+    </div>
+
+    <div class="goal-item">
+      <div class="goal-header">
+        <div class="goal-info">
+          <div class="goal-name">Apply for at Least 1 Internal Grant</div>
+          <div class="goal-why">Applying — even unsuccessfully — adds 8 points to your CV Index and teaches you grant mechanics</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-grant" onchange="updateToggle('grant',this.checked)"/>
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+      <div class="goal-insight" id="insight-grant" style="opacity:0.4;">Enable to unlock matched grant opportunities in your Opportunity Radar</div>
+    </div>
+
+  </div>
+
+  <div class="step-nav">
+    <button class="btn-back" onclick="goToStep(2)">← Back</button>
+    <button class="btn-next" onclick="goToStep(4)">Lock In Goals →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- STEP 4: COMMITMENT CONTRACT + GOAL SUMMARY -->
+<!-- ══════════════════════════════════════════ -->
+<div id="step-4" style="display:none;">
+  <div class="step-eyebrow">The Founding Commitment</div>
+  <div class="step-title">Sign the<br/><em>contract.</em></div>
+  <div class="step-subtitle">This is a personal commitment — to yourself and your cohort. Research shows that written commitment increases follow-through by 65%.</div>
+
+  <!-- Goal Summary Review -->
+  <div class="goal-summary-box" id="goalSummaryBox">
+    <div class="goal-summary-title">Your Goals — Review Before Signing</div>
+    <div class="goal-summary-grid">
+      <div class="goal-summary-item"><div class="goal-summary-val" id="sum-writing">3</div><div class="goal-summary-label">Writing sessions / week</div></div>
+      <div class="goal-summary-item"><div class="goal-summary-val" id="sum-papers">10</div><div class="goal-summary-label">Papers / month</div></div>
+      <div class="goal-summary-item"><div class="goal-summary-item"><div class="goal-summary-val" id="sum-milestones">4</div><div class="goal-summary-label">Milestones / week</div></div></div>
+      <div class="goal-summary-item"><div class="goal-summary-val" id="sum-cowork">2</div><div class="goal-summary-label">Co-working sessions / week</div></div>
+      <div class="goal-summary-item"><div class="goal-summary-val" id="sum-checkin">24h</div><div class="goal-summary-label">Partner response time</div></div>
+      <div class="goal-summary-item"><div class="goal-summary-val" id="sum-extra">+2</div><div class="goal-summary-label">Extra commitments</div></div>
+    </div>
+    <div class="goal-summary-toggles" id="toggleSummary">
+      <div class="goal-toggle-chip on" id="chip-conf">✓ Conference Abstract</div>
+      <div class="goal-toggle-chip off" id="chip-grant">— Grant Application</div>
+    </div>
+  </div>
+
+  <div class="commitment-scroll">
+    <div class="commitment-title">The Academic Engine — Scholar Commitment</div>
+    <div class="commitment-clause"><div class="clause-num">01</div><div class="clause-text"><strong>I will show up consistently.</strong> I commit to engaging with the platform and my weekly partner each week — not perfectly, but consistently. Momentum compounds and absence costs.</div></div>
+    <div class="commitment-clause"><div class="clause-num">02</div><div class="clause-text"><strong>I will be honest about my progress.</strong> I will log milestones accurately — including the ones I didn't complete. Honest tracking is more valuable than impressive tracking.</div></div>
+    <div class="commitment-clause"><div class="clause-num">03</div><div class="clause-text"><strong>I will invest in every weekly partner.</strong> Each week I receive a different accountability partner. I commit to checking in, responding within my stated timeframe, and celebrating their progress as much as my own.</div></div>
+    <div class="commitment-clause"><div class="clause-num">04</div><div class="clause-text"><strong>I will write before I feel ready.</strong> I commit to beginning writing sprints even when uninspired. Momentum is built by starting — not waiting.</div></div>
+    <div class="commitment-clause"><div class="clause-num">05</div><div class="clause-text"><strong>I will give honest feedback.</strong> As a founding member I understand my experience directly shapes the platform for future scholars across Africa and beyond.</div></div>
+    <div class="commitment-clause"><div class="clause-num">06</div><div class="clause-text"><strong>I will protect my energy.</strong> I commit to treating my research like a disciplined professional — with boundaries, rest, and a life outside the thesis. Burnout serves no one.</div></div>
+  </div>
+
+  <div class="sign-row">
+    <input type="checkbox" id="commitCheck" onchange="checkCommit()"/>
+    <label for="commitCheck">I have read and accept this commitment. I understand this is a personal pledge — to myself, my cohort, and the scholars who will use this platform after me.</label>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Sign Your Name</label>
+    <input class="signature-field" type="text" id="signature" placeholder="Type your full name to sign..." oninput="checkCommit()"/>
+    <div class="form-hint">Your signature is your word. That's enough.</div>
+  </div>
+
+  <div class="step-nav">
+    <button class="btn-back" onclick="goToStep(3)">← Back</button>
+    <button class="btn-next" id="btnSign" onclick="goToStep(5)" disabled>Sign & Continue →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- STEP 5: FIRST MATCH REVEAL                 -->
+<!-- ══════════════════════════════════════════ -->
+<div id="step-5" style="display:none;">
+  <div class="step-eyebrow">Week 1 Match</div>
+  <div class="step-title">Meet your first<br/><em>partner.</em></div>
+  <div class="step-subtitle">Matched on your Skills & Gaps Matrix — not just department or phase. Every week brings a new partner, building your network across all 20 scholars progressively.</div>
+
+  <div class="match-animation">
+    <div class="match-ring-outer"></div>
+    <div class="match-ring-inner"></div>
+    <div class="match-avatar-large">K</div>
+  </div>
+
+  <div class="match-card">
+    <div class="match-card-header">
+      <div class="match-avatar-sm">K</div>
+      <div>
+        <div class="match-name">Kwame Asante</div>
+        <div class="match-dept">PhD · Year 2 · Computer Science & Engineering</div>
+      </div>
+    </div>
+
+    <!-- Skills swap visualisation -->
+    <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.8rem;">Why You Were Matched</div>
+    <div class="match-skills-swap">
+      <div class="match-skill-box">
+        <div class="match-skill-box-label">You bring →</div>
+        <div class="match-skill-chips">
+          <span class="match-skill-chip you">Experimental Design</span>
+          <span class="match-skill-chip you">Wet Lab Synthesis</span>
+        </div>
+      </div>
+      <div class="swap-arrow">⇌</div>
+      <div class="match-skill-box">
+        <div class="match-skill-box-label">Kwame brings →</div>
+        <div class="match-skill-chips">
+          <span class="match-skill-chip them">Data Visualisation</span>
+          <span class="match-skill-chip them">Python / R</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="match-why-row">
+      <div class="match-why-item">
+        <div class="match-why-label green">Your gap</div>
+        <span>You need Data Visualisation and programming support for nanoparticle interaction analysis</span>
+      </div>
+      <div class="match-why-item">
+        <div class="match-why-label blue">Their gap</div>
+        <span>Kwame needs Experimental Design and wet lab context to ground his ML models in real materials data</span>
+      </div>
+      <div class="match-why-item">
+        <div class="match-why-label" style="color:var(--gold);">Shared</div>
+        <span>Both Phase 1 · Both targeting publication · Both set 3 writing sessions/week · Both in Engineering cluster</span>
+      </div>
+    </div>
+
+    <div class="match-message">
+      Looking forward to this — I've been searching for someone with actual lab data. My visualisation models are theoretical right now and your synthesis work would make them real. Let's build something this week.
+    </div>
+
+    <div class="match-actions">
+      <button class="match-action-btn" onclick="this.textContent='✓ Message sent';this.style.borderColor='var(--green)';this.style.color='var(--green)';">Send Introduction Message</button>
+      <button class="match-action-btn" onclick="this.textContent='✓ Saved';this.style.borderColor='var(--green)';this.style.color='var(--green)';">Save Profile</button>
+    </div>
+  </div>
+
+  <!-- First actions checklist -->
+  <div class="first-actions">
+    <div class="first-actions-title">Your First 3 Actions</div>
+    <div class="action-checklist">
+      <div class="action-check-item" onclick="this.classList.toggle('checked')">
+        <div class="action-num">01</div>
+        <div class="action-text">Send your introduction message to Kwame</div>
+        <div class="action-tag today">Today</div>
+      </div>
+      <div class="action-check-item" onclick="this.classList.toggle('checked')">
+        <div class="action-num">02</div>
+        <div class="action-text">Set your first 3 weekly milestones on your dashboard</div>
+        <div class="action-tag today">Today</div>
+      </div>
+      <div class="action-check-item" onclick="this.classList.toggle('checked')">
+        <div class="action-num">03</div>
+        <div class="action-text">Join your first co-working session — 2 sessions available this week</div>
+        <div class="action-tag week">This week</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-enter" onclick="enterDashboard()">Enter Your Dashboard →</button>
+</div>
+
+</div>
+</div>
+
+<script>
+  let currentStep = 1;
+
+  function goToStep(step) {
+    // Update goal summary before showing step 4
+    if (step === 4) updateGoalSummary();
+
+    document.getElementById('step-' + currentStep).style.display = 'none';
+    const next = document.getElementById('step-' + step);
+    next.style.display = 'block';
+    next.style.animation = 'none';
+    next.offsetHeight;
+    next.style.animation = 'stepIn 0.5s ease both';
+
+    for (let i = 1; i <= 5; i++) {
+      const dot = document.getElementById('dot-' + i);
+      const line = document.getElementById('line-' + i);
+      dot.classList.remove('active','done');
+      if (line) line.classList.remove('done');
+      if (i < step) { dot.classList.add('done'); dot.textContent = '✓'; if (line) line.classList.add('done'); }
+      else if (i === step) { dot.classList.add('active'); dot.textContent = i; }
+      else { dot.textContent = i; }
+    }
+    document.getElementById('progressLabel').textContent = 'Step ' + step + ' of 5';
+    currentStep = step;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function selectPhase(el, phase) {
+    document.querySelectorAll('.phase-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function addTag() {
+    const input = document.getElementById('keywordInput');
+    const val = input.value.trim();
+    if (!val) return;
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = val + ' <button onclick="removeTag(this)">×</button>';
+    document.getElementById('tagsList').appendChild(chip);
+    input.value = '';
+  }
+
+  function removeTag(btn) { btn.parentElement.remove(); }
+
+  function toggleSkill(el, type) {
+    const bring = 'selected-bring', need = 'selected-need';
+    const cls = type === 'bring' ? bring : need;
+    el.classList.toggle(cls);
+  }
+
+  function updateGoal(id, val, unit) {
+    document.getElementById('val-' + id).textContent = val;
+  }
+
+  function updateToggle(id, checked) {
+    const insight = document.getElementById('insight-' + id);
+    if (insight) insight.style.opacity = checked ? '1' : '0.4';
+  }
+
+  function updateGoalSummary() {
+    document.getElementById('sum-writing').textContent = document.getElementById('sl-writing').value;
+    document.getElementById('sum-papers').textContent = document.getElementById('sl-papers').value;
+    document.getElementById('sum-milestones').textContent = document.getElementById('sl-milestones').value;
+    document.getElementById('sum-cowork').textContent = document.getElementById('sl-cowork').value;
+    document.getElementById('sum-checkin').textContent = document.getElementById('sl-checkin').value + 'h';
+    const conf = document.getElementById('toggle-conf').checked;
+    const grant = document.getElementById('toggle-grant').checked;
+    let extras = (conf ? 1 : 0) + (grant ? 1 : 0);
+    document.getElementById('sum-extra').textContent = '+' + extras;
+    document.getElementById('chip-conf').className = 'goal-toggle-chip ' + (conf ? 'on' : 'off');
+    document.getElementById('chip-conf').textContent = (conf ? '✓' : '—') + ' Conference Abstract';
+    document.getElementById('chip-grant').className = 'goal-toggle-chip ' + (grant ? 'on' : 'off');
+    document.getElementById('chip-grant').textContent = (grant ? '✓' : '—') + ' Grant Application';
+  }
+
+  function checkCommit() {
+    const checked = document.getElementById('commitCheck').checked;
+    const signed = document.getElementById('signature').value.trim().length > 2;
+    const btn = document.getElementById('btnSign');
+    btn.disabled = !(checked && signed);
+  }
+
+  function enterDashboard() {
+    window.location.href = 'academic-engine-dashboard.html';
+  }
+
+  // Slider gradient fill
+  document.querySelectorAll('.goal-slider').forEach(slider => {
+    function fillSlider(sl) {
+      const pct = ((sl.value - sl.min) / (sl.max - sl.min)) * 100;
+      sl.style.background = `linear-gradient(to right, var(--gold) ${pct}%, var(--border2) ${pct}%)`;
+    }
+    slider.addEventListener('input', function() { fillSlider(this); });
+    fillSlider(slider);
+  });
+</script>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo</span>
+    <a href="index.html" class="dnav-link">Home</a>
+    <a href="academic-engine-landing.html" class="dnav-link">Landing</a>
+    <a href="academic-engine-onboarding.html" class="dnav-link">Onboarding</a>
+    <a href="academic-engine-dashboard.html" class="dnav-link">Dashboard</a>
+    <a href="academic-engine-milestones.html" class="dnav-link">Milestones</a>
+    <a href="academic-engine-sprint.html" class="dnav-link">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" class="dnav-link">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem 0.5rem;margin-left:0.2rem;">✕</button>
+  </div>
+  <style>
+    .dnav-link { font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s; }
+    .dnav-link:hover { border-color:#c9a84c;color:#c9a84c; }
+  </style>
+
+</body>
+</html>

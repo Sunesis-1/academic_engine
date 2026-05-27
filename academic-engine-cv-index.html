@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine — CV Competitiveness Index</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808; --deep: #0e0e0e; --card: #141414; --card2: #181818;
+      --border: #222; --border2: #2a2a2a;
+      --gold: #c9a84c; --gold-light: #e8c87a; --gold-dim: rgba(201,168,76,0.12);
+      --cream: #f5f0e8; --muted: #555; --muted2: #777; --text: #d0cbc3;
+      --green: #4caf7d; --green-dim: rgba(76,175,125,0.1);
+      --blue: #5c8fe0; --blue-dim: rgba(92,143,224,0.1);
+      --red: #e05c5c; --red-dim: rgba(224,92,92,0.1);
+      --purple: #9c6ee0; --purple-dim: rgba(156,110,224,0.1);
+      --orange: #e09c5c;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; display: flex; overflow-x: hidden; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; }
+
+    /* SIDEBAR */
+    .sidebar { width: 240px; flex-shrink: 0; background: var(--deep); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; overflow-y: auto; }
+    .sidebar-logo { padding: 1.8rem 1.5rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
+    .sidebar-logo p { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+    .sidebar-scholar { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; }
+    .scholar-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8a6e2f); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--black); flex-shrink: 0; }
+    .scholar-name { font-size: 0.82rem; font-weight: 500; color: var(--cream); }
+    .scholar-dept { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--gold); text-transform: uppercase; margin-top: 0.15rem; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-section-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding: 0.8rem 1.5rem 0.4rem; }
+    .nav-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 1.5rem; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; font-size: 0.82rem; color: var(--muted2); text-decoration: none; }
+    .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: var(--gold-dim); }
+    .nav-icon { font-size: 0.9rem; width: 1.2rem; text-align: center; }
+    .nav-badge { margin-left: auto; background: var(--gold); color: var(--black); font-family: 'DM Mono', monospace; font-size: 0.55rem; padding: 0.1rem 0.4rem; border-radius: 2px; }
+    .sidebar-phase { padding: 1.2rem 1.5rem; border-top: 1px solid var(--border); margin-top: auto; }
+    .phase-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .phase-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--gold); margin-bottom: 0.5rem; }
+    .phase-bar-track { height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+    .phase-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; width: 38%; }
+    .phase-pct { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.4rem; }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+    /* TOPBAR */
+    .topbar { position: sticky; top: 0; z-index: 40; background: rgba(8,8,8,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .topbar-left h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--cream); }
+    .topbar-left p { font-size: 0.75rem; color: var(--muted2); margin-top: 0.1rem; }
+    .topbar-right { display: flex; align-items: center; gap: 0.8rem; }
+    .tb-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 1.2rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+    .tb-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .tb-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+    .tb-btn.primary:hover { background: var(--gold-light); }
+
+    /* CONTENT */
+    .content { padding: 2rem 2.5rem 5rem; display: flex; flex-direction: column; gap: 2rem; }
+
+    /* HERO SCORE SECTION */
+    .hero-score { display: grid; grid-template-columns: auto 1fr; gap: 3rem; align-items: center; background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); padding: 2.5rem; }
+    .score-visual { display: flex; flex-direction: column; align-items: center; gap: 1rem; flex-shrink: 0; }
+    .score-ring { position: relative; width: 180px; height: 180px; }
+    .score-ring svg { transform: rotate(-90deg); }
+    .score-track { fill: none; stroke: var(--border2); }
+    .score-arc { fill: none; stroke-linecap: round; stroke: var(--gold); transition: stroke-dashoffset 1.5s cubic-bezier(0.34,1.56,0.64,1); }
+    .score-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .score-num { font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 900; color: var(--gold); line-height: 1; }
+    .score-denom { font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; }
+    .score-grade { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; padding: 0.3rem 1rem; border: 1px solid rgba(201,168,76,0.3); color: var(--gold); background: var(--gold-dim); }
+    .score-right { display: flex; flex-direction: column; gap: 1.5rem; }
+    .score-headline { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 700; color: var(--cream); line-height: 1.2; }
+    .score-headline em { font-style: italic; color: var(--gold); }
+    .score-context { font-size: 0.88rem; color: var(--muted2); line-height: 1.7; max-width: 520px; }
+    .score-benchmarks { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .benchmark { display: flex; flex-direction: column; gap: 0.2rem; }
+    .bm-val { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; }
+    .bm-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+    .score-trajectory { display: flex; align-items: center; gap: 0.6rem; }
+    .traj-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+    /* TRAJECTORY SPARKLINE */
+    .sparkline-wrap { flex: 1; height: 32px; position: relative; }
+    .sparkline-wrap svg { width: 100%; height: 100%; }
+
+    /* SIX PILLARS GRID */
+    .pillars-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
+    .pillar-card { background: var(--card); padding: 1.8rem; transition: background 0.2s; cursor: pointer; position: relative; overflow: hidden; }
+    .pillar-card:hover { background: var(--card2); }
+    .pillar-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; transform: scaleX(0); transform-origin: left; transition: transform 0.4s ease; }
+    .pillar-card:hover::before { transform: scaleX(1); }
+    .pillar-card.p-thesis::before { background: var(--blue); }
+    .pillar-card.p-writing::before { background: var(--gold); }
+    .pillar-card.p-publications::before { background: var(--purple); }
+    .pillar-card.p-conferences::before { background: var(--orange); }
+    .pillar-card.p-collaborations::before { background: var(--green); }
+    .pillar-card.p-grants::before { background: var(--red); }
+    .pillar-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.2rem; }
+    .pillar-icon { font-size: 1.3rem; }
+    .pillar-score-badge { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .pillar-score-max { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); }
+    .pillar-name { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted2); margin-bottom: 0.4rem; }
+    .pillar-desc { font-size: 0.78rem; color: var(--muted2); line-height: 1.6; margin-bottom: 1rem; }
+    .pillar-bar-track { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-bottom: 0.6rem; }
+    .pillar-bar-fill { height: 100%; border-radius: 2px; transition: width 1.2s cubic-bezier(0.34,1.56,0.64,1); }
+    .pillar-meta { display: flex; justify-content: space-between; font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); }
+    .pillar-action { margin-top: 1rem; font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 0.4rem 0.8rem; border: 1px solid var(--border2); background: transparent; cursor: pointer; transition: all 0.2s; display: inline-block; }
+    .pillar-action:hover { border-color: var(--gold); color: var(--gold); }
+    .pillar-items { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.8rem; }
+    .pillar-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0.6rem; background: var(--deep); border: 1px solid var(--border); font-size: 0.75rem; color: var(--text); }
+    .pillar-item-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .pillar-item-status { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; }
+
+    /* COMPARISON SECTION */
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    /* COHORT COMPARISON */
+    .compare-card { background: var(--card); border: 1px solid var(--border); }
+    .compare-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .compare-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .compare-body { padding: 1.5rem; }
+    .cohort-compare-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .cc-row { display: flex; align-items: center; gap: 0.8rem; }
+    .cc-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted2); width: 110px; flex-shrink: 0; }
+    .cc-bars { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .cc-bar-row { display: flex; align-items: center; gap: 0.5rem; }
+    .cc-bar-label { font-family: 'DM Mono', monospace; font-size: 0.5rem; color: var(--muted); width: 30px; flex-shrink: 0; }
+    .cc-track { flex: 1; height: 6px; background: var(--border2); border-radius: 3px; overflow: hidden; }
+    .cc-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+    .cc-val { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); width: 24px; text-align: right; flex-shrink: 0; }
+
+    /* GLOBAL BENCHMARK */
+    .global-table { width: 100%; }
+    .gt-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+    .gt-row:last-child { border-bottom: none; }
+    .gt-tier { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 0.52rem; font-weight: 700; flex-shrink: 0; }
+    .gt-tier.t1 { background: rgba(201,168,76,0.2); color: var(--gold); }
+    .gt-tier.t2 { background: rgba(92,143,224,0.15); color: var(--blue); }
+    .gt-tier.t3 { background: var(--border2); color: var(--muted2); }
+    .gt-name { font-size: 0.8rem; color: var(--cream); flex: 1; }
+    .gt-score { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--muted2); }
+    .gt-score.you { color: var(--gold); }
+    .gt-badge { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.15rem 0.5rem; border: 1px solid; }
+    .gt-badge.current { border-color: rgba(201,168,76,0.3); color: var(--gold); background: var(--gold-dim); }
+    .gt-badge.target { border-color: var(--border2); color: var(--muted); }
+
+    /* PHASE PROJECTION */
+    .projection { background: var(--card); border: 1px solid var(--border); }
+    .projection-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .projection-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .projection-body { padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); }
+    .proj-phase { background: var(--deep); padding: 1.2rem; }
+    .proj-phase.current { background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2); }
+    .proj-phase-tag { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; }
+    .proj-phase-tag.active { color: var(--gold); }
+    .proj-score { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--muted2); }
+    .proj-score.current { color: var(--gold); }
+    .proj-score.projected { color: var(--muted); font-style: italic; }
+    .proj-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.5; }
+    .proj-items { margin-top: 0.8rem; display: flex; flex-direction: column; gap: 0.3rem; }
+    .proj-item { font-size: 0.72rem; color: var(--muted2); display: flex; align-items: center; gap: 0.4rem; }
+    .proj-item::before { content: '→'; color: var(--gold); font-size: 0.65rem; flex-shrink: 0; }
+    .proj-item.done { color: var(--muted); }
+    .proj-item.done::before { content: '✓'; color: var(--green); }
+
+    /* NEXT ACTIONS */
+    .actions-section { background: var(--card); border: 1px solid var(--border); }
+    .actions-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .actions-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .actions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
+    .action-card { background: var(--deep); padding: 1.4rem; transition: background 0.15s; cursor: pointer; }
+    .action-card:hover { background: var(--card); }
+    .action-impact { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.8rem; }
+    .impact-badge { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.2rem 0.5rem; border: 1px solid; }
+    .impact-badge.high { border-color: rgba(76,175,125,0.4); color: var(--green); background: var(--green-dim); }
+    .impact-badge.medium { border-color: rgba(201,168,76,0.4); color: var(--gold); background: var(--gold-dim); }
+    .impact-badge.low { border-color: var(--border2); color: var(--muted); }
+    .action-points { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--gold); margin-left: auto; }
+    .action-name { font-size: 0.88rem; color: var(--cream); font-weight: 500; margin-bottom: 0.4rem; line-height: 1.4; }
+    .action-desc { font-size: 0.75rem; color: var(--muted2); line-height: 1.6; margin-bottom: 0.8rem; }
+    .action-deadline { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+    .action-deadline.urgent { color: var(--red); }
+    .action-btn { margin-top: 0.8rem; font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.4rem 0.8rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.15s; }
+    .action-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* HISTORY CHART */
+    .history-card { background: var(--card); border: 1px solid var(--border); }
+    .history-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .history-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .history-body { padding: 1.5rem; }
+    .chart-legend { display: flex; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.08em; color: var(--muted2); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .chart-wrap { position: relative; }
+    .chart-wrap svg { width: 100%; overflow: visible; }
+    .chart-grid-line { stroke: var(--border); stroke-width: 1; stroke-dasharray: 4 4; }
+    .chart-axis-label { font-family: 'DM Mono', monospace; font-size: 10px; fill: var(--muted); }
+    .chart-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { opacity: 0.15; }
+    .chart-dot { transition: r 0.2s; cursor: pointer; }
+    .chart-dot:hover { r: 6; }
+
+    /* PILLAR DETAIL MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; display: none; align-items: center; justify-content: center; padding: 2rem; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--card); border: 1px solid var(--border); width: 100%; max-width: 580px; max-height: 85vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+    @keyframes slideUp { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+    .modal-header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--card); z-index: 1; }
+    .modal-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
+    .modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; }
+    .modal-score-row { display: flex; align-items: center; gap: 1.5rem; padding: 1.2rem; background: var(--deep); border: 1px solid var(--border); border-left: 3px solid var(--gold); }
+    .modal-score-big { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .modal-score-info { flex: 1; }
+    .modal-score-name { font-size: 0.88rem; color: var(--cream); font-weight: 500; }
+    .modal-score-sub { font-size: 0.75rem; color: var(--muted2); margin-top: 0.2rem; }
+    .modal-add-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.6rem 1.2rem; background: var(--gold); border: none; color: var(--black); cursor: pointer; transition: background 0.2s; }
+    .modal-add-btn:hover { background: var(--gold-light); }
+    .modal-items-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .modal-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.9rem 1rem; background: var(--deep); border: 1px solid var(--border); }
+    .modal-item-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .modal-item-info { flex: 1; }
+    .modal-item-name { font-size: 0.82rem; color: var(--cream); }
+    .modal-item-meta { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); margin-top: 0.2rem; }
+    .modal-item-pts { font-family: 'DM Mono', monospace; font-size: 0.62rem; color: var(--gold); flex-shrink: 0; }
+    .modal-tip { padding: 1rem 1.2rem; background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2); border-left: 3px solid var(--gold); font-size: 0.82rem; color: var(--text); line-height: 1.7; }
+    .modal-tip strong { color: var(--gold); font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-bottom: 0.3rem; }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+
+    @media(max-width:1100px){ .pillars-grid{grid-template-columns:repeat(2,1fr);} .actions-grid{grid-template-columns:repeat(2,1fr);} .projection-body{grid-template-columns:1fr;} }
+    @media(max-width:900px){ .sidebar{display:none;} .main{margin-left:0;} .hero-score{grid-template-columns:1fr;gap:1.5rem;} .comparison{grid-template-columns:1fr;} .pillars-grid{grid-template-columns:1fr;} .actions-grid{grid-template-columns:1fr;} .topbar{padding:1rem 1.2rem;} .content{padding:1.2rem 1.2rem 4rem;} .end-stats{grid-template-columns:repeat(2,1fr);} }
+    @media(max-width:600px){ .score-benchmarks{gap:1rem;} }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><span>The Academic Engine</span><p>Scholar Dashboard</p></div>
+  <div class="sidebar-scholar">
+    <div class="scholar-avatar">A</div>
+    <div><div class="scholar-name">Your Name</div><div class="scholar-dept">PhD · Engineering</div></div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Workspace</div>
+    <a class="nav-item" href="academic-engine-dashboard.html"><span class="nav-icon">⬡</span> Dashboard</a>
+    <a class="nav-item" href="academic-engine-milestones.html"><span class="nav-icon">◎</span> Milestones <span class="nav-badge">3</span></a>
+    <a class="nav-item" href="academic-engine-sprint.html"><span class="nav-icon">✦</span> Writing Sprints</a>
+    <a class="nav-item active" href="academic-engine-cv-index.html"><span class="nav-icon">◈</span> CV Index</a>
+    <div class="nav-section-label">Community</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⟡</span> Cohort Board</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⇌</span> Weekly Map</a>
+    <a class="nav-item" href="#"><span class="nav-icon">◉</span> Co-Working Rooms <span class="nav-badge">2</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">◷</span> Events</a>
+    <div class="nav-section-label">Research</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⊞</span> Advisor CRM <span class="nav-badge">!</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">◫</span> Resource Feed</a>
+    <a class="nav-item" href="#"><span class="nav-icon">⊕</span> Peer Grid</a>
+    <a class="nav-item" href="#"><span class="nav-icon">◬</span> Opportunity Radar <span class="nav-badge">2</span></a>
+    <a class="nav-item" href="#"><span class="nav-icon">◰</span> Grants Tracker</a>
+  </nav>
+  <div class="sidebar-phase">
+    <div class="phase-label">Current Phase</div>
+    <div class="phase-name">Phase 01 · Foundation</div>
+    <div class="phase-bar-track"><div class="phase-bar-fill"></div></div>
+    <div class="phase-pct">38% complete</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2>CV Competitiveness Index</h2>
+      <p>Your live academic profile score — updated as you achieve milestones</p>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-btn" onclick="document.getElementById('modal').classList.add('open')">+ Log Achievement</button>
+      <button class="tb-btn primary">Export CV Profile →</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- HERO SCORE -->
+    <div class="hero-score">
+      <div class="score-visual">
+        <div class="score-ring">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle class="score-track" cx="90" cy="90" r="76" stroke-width="8"/>
+            <circle class="score-arc" id="scoreArc" cx="90" cy="90" r="76" stroke-width="8"
+              stroke-dasharray="477.5" stroke-dashoffset="314.1"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-num" id="heroScoreNum">34</div>
+            <div class="score-denom">/ 100</div>
+          </div>
+        </div>
+        <div class="score-grade">Phase 1 · Emerging</div>
+      </div>
+
+      <div class="score-right">
+        <div class="score-headline">You're <em>ahead</em> of your<br/>cohort average.</div>
+        <div class="score-context">Your CV Index measures the full breadth of your academic profile — not just thesis progress. Publications, conferences, grants, collaborations, and writing consistency all contribute. At graduation, a score of 75+ signals a highly competitive scholar ready for postdoctoral positions or global industry roles.</div>
+
+        <div class="score-benchmarks">
+          <div class="benchmark"><div class="bm-val" style="color:var(--gold);">34</div><div class="bm-label">Your score</div></div>
+          <div class="benchmark"><div class="bm-val" style="color:var(--muted2);">28</div><div class="bm-label">Cohort avg</div></div>
+          <div class="benchmark"><div class="bm-val" style="color:var(--blue);">52</div><div class="bm-label">Phase 2 target</div></div>
+          <div class="benchmark"><div class="bm-val" style="color:var(--green);">75+</div><div class="bm-label">Graduation target</div></div>
+        </div>
+
+        <div class="score-trajectory">
+          <div class="traj-label">12-week trajectory</div>
+          <div class="sparkline-wrap">
+            <svg viewBox="0 0 300 32" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.3"/>
+                  <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path d="M0,28 L30,26 L60,24 L90,22 L120,20 L150,19 L180,17 L210,15 L240,13 L270,11 L300,8" fill="none" stroke="#c9a84c" stroke-width="2" stroke-linecap="round"/>
+              <path d="M0,28 L30,26 L60,24 L90,22 L120,20 L150,19 L180,17 L210,15 L240,13 L270,11 L300,8 L300,32 L0,32 Z" fill="url(#sparkGrad)"/>
+              <circle cx="300" cy="8" r="3" fill="#c9a84c"/>
+            </svg>
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--green);">↑ +6 pts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIX PILLARS -->
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;">The Six Pillars</div>
+      <div class="pillars-grid">
+
+        <!-- THESIS -->
+        <div class="pillar-card p-thesis" onclick="openPillar('thesis')">
+          <div class="pillar-header">
+            <div class="pillar-icon">📖</div>
+            <div style="text-align:right;"><div class="pillar-score-badge" style="color:var(--blue);">14</div><div class="pillar-score-max">/ 20 pts</div></div>
+          </div>
+          <div class="pillar-name">Thesis Progress</div>
+          <div class="pillar-desc">Chapter completion, milestone adherence, writing consistency, and supervisor approval stages.</div>
+          <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:70%;background:var(--blue);"></div></div>
+          <div class="pillar-meta"><span>70% of pillar complete</span><span style="color:var(--blue);">Strong</span></div>
+          <div class="pillar-items">
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--green);"></div>Chapter 1 complete<div class="pillar-item-status" style="color:var(--green);">Done</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--gold);"></div>Chapter 2 in progress (44%)<div class="pillar-item-status" style="color:var(--gold);">Active</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--border2);"></div>Chapter 3 — not started<div class="pillar-item-status" style="color:var(--muted);">Pending</div></div>
+          </div>
+          <div class="pillar-action">View chapter map →</div>
+        </div>
+
+        <!-- WRITING CONSISTENCY -->
+        <div class="pillar-card p-writing" onclick="openPillar('writing')">
+          <div class="pillar-header">
+            <div class="pillar-icon">✍️</div>
+            <div style="text-align:right;"><div class="pillar-score-badge" style="color:var(--gold);">12</div><div class="pillar-score-max">/ 15 pts</div></div>
+          </div>
+          <div class="pillar-name">Writing Consistency</div>
+          <div class="pillar-desc">Daily writing streaks, sprint session attendance, word count targets hit, and Pomodoro completion rate.</div>
+          <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:80%;background:var(--gold);"></div></div>
+          <div class="pillar-meta"><span>80% of pillar complete</span><span style="color:var(--gold);">Excellent</span></div>
+          <div class="pillar-items">
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--green);"></div>6-day streak active<div class="pillar-item-status" style="color:var(--green);">🔥</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--green);"></div>7 sessions attended<div class="pillar-item-status" style="color:var(--green);">Done</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--gold);"></div>Word targets: 4/7 hit<div class="pillar-item-status" style="color:var(--gold);">57%</div></div>
+          </div>
+          <div class="pillar-action">View sprint history →</div>
+        </div>
+
+        <!-- PUBLICATIONS -->
+        <div class="pillar-card p-publications" onclick="openPillar('publications')">
+          <div class="pillar-header">
+            <div class="pillar-icon">📄</div>
+            <div style="text-align:right;"><div class="pillar-score-badge" style="color:var(--purple);">2</div><div class="pillar-score-max">/ 25 pts</div></div>
+          </div>
+          <div class="pillar-name">Publications</div>
+          <div class="pillar-desc">Peer-reviewed papers submitted, under review, or published. Scopus-indexed journals weighted highest.</div>
+          <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:8%;background:var(--purple);"></div></div>
+          <div class="pillar-meta"><span>8% of pillar complete</span><span style="color:var(--red);">Needs attention</span></div>
+          <div class="pillar-items">
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--gold);"></div>Systematic review — 35% drafted<div class="pillar-item-status" style="color:var(--gold);">Drafting</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--border2);"></div>No papers submitted yet<div class="pillar-item-status" style="color:var(--muted);">—</div></div>
+          </div>
+          <div class="pillar-action">Open publication pipeline →</div>
+        </div>
+
+        <!-- CONFERENCES -->
+        <div class="pillar-card p-conferences" onclick="openPillar('conferences')">
+          <div class="pillar-header">
+            <div class="pillar-icon">🎤</div>
+            <div style="text-align:right;"><div class="pillar-score-badge" style="color:var(--orange);">2</div><div class="pillar-score-max">/ 15 pts</div></div>
+          </div>
+          <div class="pillar-name">Conferences & Events</div>
+          <div class="pillar-desc">Abstract submissions, poster presentations, talk invitations, and seminar attendance.</div>
+          <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:13%;background:var(--orange);"></div></div>
+          <div class="pillar-meta"><span>13% of pillar complete</span><span style="color:var(--red);">Needs attention</span></div>
+          <div class="pillar-items">
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--green);"></div>Attended 1 virtual seminar<div class="pillar-item-status" style="color:var(--green);">Done</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--red);"></div>AMRS abstract — overdue!<div class="pillar-item-status" style="color:var(--red);">Overdue</div></div>
+          </div>
+          <div class="pillar-action">View opportunity radar →</div>
+        </div>
+
+        <!-- COLLABORATIONS -->
+        <div class="pillar-card p-collaborations" onclick="openPillar('collaborations')">
+          <div class="pillar-header">
+            <div class="pillar-icon">🤝</div>
+            <div style="text-align:right;"><div class="pillar-score-badge" style="color:var(--green);">4</div><div class="pillar-score-max">/ 15 pts</div></div>
+          </div>
+          <div class="pillar-name">Collaborations</div>
+          <div class="pillar-desc">Interdisciplinary peer connections, co-authorship, weekly partner engagement, and peer grid activity.</div>
+          <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:27%;background:var(--green);"></div></div>
+          <div class="pillar-meta"><span>27% of pillar complete</span><span style="color:var(--gold);">Growing</span></div>
+          <div class="pillar-items">
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--green);"></div>2 weekly partners so far<div class="pillar-item-status" style="color:var(--green);">Active</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--gold);"></div>1 peer grid connection<div class="pillar-item-status" style="color:var(--gold);">Pending</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--border2);"></div>No co-authorships yet<div class="pillar-item-status" style="color:var(--muted);">—</div></div>
+          </div>
+          <div class="pillar-action">Open peer grid →</div>
+        </div>
+
+        <!-- GRANTS -->
+        <div class="pillar-card p-grants" onclick="openPillar('grants')">
+          <div class="pillar-header">
+            <div class="pillar-icon">💰</div>
+            <div style="text-align:right;"><div class="pillar-score-badge" style="color:var(--red);">0</div><div class="pillar-score-max">/ 10 pts</div></div>
+          </div>
+          <div class="pillar-name">Grants & Funding</div>
+          <div class="pillar-desc">Internal grants, external fellowships, travel awards, and equipment funding applications.</div>
+          <div class="pillar-bar-track"><div class="pillar-bar-fill" style="width:0%;background:var(--red);"></div></div>
+          <div class="pillar-meta"><span>0% of pillar complete</span><span style="color:var(--red);">Not started</span></div>
+          <div class="pillar-items">
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--red);"></div>No applications filed<div class="pillar-item-status" style="color:var(--red);">—</div></div>
+            <div class="pillar-item"><div class="pillar-item-dot" style="background:var(--gold);"></div>UG Grant — due 30 Jun<div class="pillar-item-status" style="color:var(--gold);">Urgent</div></div>
+          </div>
+          <div class="pillar-action">Open grants tracker →</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SCORE HISTORY CHART -->
+    <div class="history-card">
+      <div class="history-header">
+        <div class="history-title">Score Trajectory — Last 12 Weeks</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);letter-spacing:0.1em;">vs cohort average</div>
+      </div>
+      <div class="history-body">
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--gold);"></div>Your score</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--blue);opacity:0.6;"></div>Cohort average</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green);opacity:0.4;"></div>Phase 1 target</div>
+        </div>
+        <div class="chart-wrap">
+          <svg viewBox="0 0 700 180" preserveAspectRatio="xMidYMid meet" style="height:180px;">
+            <defs>
+              <linearGradient id="yourGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.25"/>
+                <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="cohortGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#5c8fe0" stop-opacity="0.12"/>
+                <stop offset="100%" stop-color="#5c8fe0" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <!-- Grid lines -->
+            <line x1="50" y1="20" x2="680" y2="20" class="chart-grid-line"/>
+            <line x1="50" y1="56" x2="680" y2="56" class="chart-grid-line"/>
+            <line x1="50" y1="92" x2="680" y2="92" class="chart-grid-line"/>
+            <line x1="50" y1="128" x2="680" y2="128" class="chart-grid-line"/>
+            <line x1="50" y1="164" x2="680" y2="164" class="chart-grid-line"/>
+            <!-- Y axis labels -->
+            <text x="42" y="24" class="chart-axis-label" text-anchor="end">50</text>
+            <text x="42" y="60" class="chart-axis-label" text-anchor="end">40</text>
+            <text x="42" y="96" class="chart-axis-label" text-anchor="end">30</text>
+            <text x="42" y="132" class="chart-axis-label" text-anchor="end">20</text>
+            <text x="42" y="168" class="chart-axis-label" text-anchor="end">10</text>
+            <!-- X axis labels -->
+            <text x="50" y="178" class="chart-axis-label" text-anchor="middle">Wk1</text>
+            <text x="113" y="178" class="chart-axis-label" text-anchor="middle">Wk2</text>
+            <text x="176" y="178" class="chart-axis-label" text-anchor="middle">Wk3</text>
+            <text x="239" y="178" class="chart-axis-label" text-anchor="middle">Wk4</text>
+            <text x="302" y="178" class="chart-axis-label" text-anchor="middle">Wk5</text>
+            <text x="365" y="178" class="chart-axis-label" text-anchor="middle">Wk6</text>
+            <text x="428" y="178" class="chart-axis-label" text-anchor="middle">Wk7</text>
+            <text x="491" y="178" class="chart-axis-label" text-anchor="middle">Wk8</text>
+            <text x="554" y="178" class="chart-axis-label" text-anchor="middle">Wk9</text>
+            <text x="617" y="178" class="chart-axis-label" text-anchor="middle">Wk10</text>
+            <text x="680" y="178" class="chart-axis-label" text-anchor="middle">Wk12</text>
+            <!-- Target line (phase 1 = 52) -->
+            <line x1="50" y1="38" x2="680" y2="38" stroke="rgba(76,175,125,0.25)" stroke-width="1" stroke-dasharray="6 3"/>
+            <text x="685" y="41" class="chart-axis-label" fill="#4caf7d">52</text>
+            <!-- Cohort area -->
+            <path d="M50,146 L113,143 L176,140 L239,138 L302,136 L365,134 L428,132 L491,130 L554,128 L617,126 L680,124 L680,164 L50,164 Z" fill="url(#cohortGrad)"/>
+            <!-- Cohort line -->
+            <path d="M50,146 L113,143 L176,140 L239,138 L302,136 L365,134 L428,132 L491,130 L554,128 L617,126 L680,124" class="chart-line" stroke="#5c8fe0" stroke-opacity="0.5" stroke-dasharray="5 3"/>
+            <!-- Your area -->
+            <path d="M50,164 L113,157 L176,150 L239,143 L302,138 L365,132 L428,127 L491,121 L554,115 L617,110 L680,104 L680,164 Z" fill="url(#yourGrad)"/>
+            <!-- Your line -->
+            <path d="M50,164 L113,157 L176,150 L239,143 L302,138 L365,132 L428,127 L491,121 L554,115 L617,110 L680,104" class="chart-line" stroke="#c9a84c" stroke-width="2.5"/>
+            <!-- Your dots -->
+            <circle cx="50" cy="164" r="4" fill="#c9a84c" class="chart-dot"><title>Wk1: 10</title></circle>
+            <circle cx="176" cy="150" r="4" fill="#c9a84c" class="chart-dot"><title>Wk3: 14</title></circle>
+            <circle cx="302" cy="138" r="4" fill="#c9a84c" class="chart-dot"><title>Wk5: 18</title></circle>
+            <circle cx="428" cy="127" r="4" fill="#c9a84c" class="chart-dot"><title>Wk7: 22</title></circle>
+            <circle cx="554" cy="115" r="4" fill="#c9a84c" class="chart-dot"><title>Wk9: 28</title></circle>
+            <circle cx="680" cy="104" r="5" fill="#c9a84c" stroke="#080808" stroke-width="2" class="chart-dot"><title>Now: 34</title></circle>
+            <!-- NOW label -->
+            <text x="680" y="98" class="chart-axis-label" text-anchor="middle" fill="#c9a84c">34</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARISON + GLOBAL BENCHMARK -->
+    <div class="comparison">
+      <!-- Cohort comparison -->
+      <div class="compare-card">
+        <div class="compare-header">
+          <div class="compare-title">Cohort Comparison — Phase 1</div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--green);">You · 34 pts</div>
+        </div>
+        <div class="compare-body">
+          <div class="cohort-compare-list">
+            <div class="cc-row">
+              <div class="cc-label">Thesis</div>
+              <div class="cc-bars">
+                <div class="cc-bar-row"><div class="cc-bar-label" style="color:var(--gold);">You</div><div class="cc-track"><div class="cc-fill" style="width:70%;background:var(--gold);"></div></div><div class="cc-val">70%</div></div>
+                <div class="cc-bar-row"><div class="cc-bar-label">Avg</div><div class="cc-track"><div class="cc-fill" style="width:55%;background:var(--blue);opacity:0.5;"></div></div><div class="cc-val">55%</div></div>
+              </div>
+            </div>
+            <div class="cc-row">
+              <div class="cc-label">Writing</div>
+              <div class="cc-bars">
+                <div class="cc-bar-row"><div class="cc-bar-label" style="color:var(--gold);">You</div><div class="cc-track"><div class="cc-fill" style="width:80%;background:var(--gold);"></div></div><div class="cc-val">80%</div></div>
+                <div class="cc-bar-row"><div class="cc-bar-label">Avg</div><div class="cc-track"><div class="cc-fill" style="width:50%;background:var(--blue);opacity:0.5;"></div></div><div class="cc-val">50%</div></div>
+              </div>
+            </div>
+            <div class="cc-row">
+              <div class="cc-label">Publications</div>
+              <div class="cc-bars">
+                <div class="cc-bar-row"><div class="cc-bar-label" style="color:var(--gold);">You</div><div class="cc-track"><div class="cc-fill" style="width:8%;background:var(--gold);"></div></div><div class="cc-val">8%</div></div>
+                <div class="cc-bar-row"><div class="cc-bar-label">Avg</div><div class="cc-track"><div class="cc-fill" style="width:6%;background:var(--blue);opacity:0.5;"></div></div><div class="cc-val">6%</div></div>
+              </div>
+            </div>
+            <div class="cc-row">
+              <div class="cc-label">Conferences</div>
+              <div class="cc-bars">
+                <div class="cc-bar-row"><div class="cc-bar-label" style="color:var(--gold);">You</div><div class="cc-track"><div class="cc-fill" style="width:13%;background:var(--gold);"></div></div><div class="cc-val">13%</div></div>
+                <div class="cc-bar-row"><div class="cc-bar-label">Avg</div><div class="cc-track"><div class="cc-fill" style="width:10%;background:var(--blue);opacity:0.5;"></div></div><div class="cc-val">10%</div></div>
+              </div>
+            </div>
+            <div class="cc-row">
+              <div class="cc-label">Grants</div>
+              <div class="cc-bars">
+                <div class="cc-bar-row"><div class="cc-bar-label" style="color:var(--red);">You</div><div class="cc-track"><div class="cc-fill" style="width:0%;background:var(--red);"></div></div><div class="cc-val">0%</div></div>
+                <div class="cc-bar-row"><div class="cc-bar-label">Avg</div><div class="cc-track"><div class="cc-fill" style="width:4%;background:var(--blue);opacity:0.5;"></div></div><div class="cc-val">4%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Global benchmark -->
+      <div class="compare-card">
+        <div class="compare-header">
+          <div class="compare-title">Global Scholar Benchmarks</div>
+          <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);">By graduation score</div>
+        </div>
+        <div class="compare-body">
+          <div class="global-table">
+            <div class="gt-row">
+              <div class="gt-tier t1">★</div>
+              <div class="gt-name">Elite (MIT/Oxford/Stanford)</div>
+              <div class="gt-score">85+</div>
+              <div class="gt-badge target">Target</div>
+            </div>
+            <div class="gt-row">
+              <div class="gt-tier t1">A</div>
+              <div class="gt-name">Highly Competitive</div>
+              <div class="gt-score">75–84</div>
+              <div class="gt-badge target">Target</div>
+            </div>
+            <div class="gt-row">
+              <div class="gt-tier t2">B</div>
+              <div class="gt-name">Competitive</div>
+              <div class="gt-score">60–74</div>
+              <div class="gt-badge target">Phase 3</div>
+            </div>
+            <div class="gt-row">
+              <div class="gt-tier t2">C</div>
+              <div class="gt-name">Developing</div>
+              <div class="gt-score">45–59</div>
+              <div class="gt-badge target">Phase 2</div>
+            </div>
+            <div class="gt-row" style="background:var(--gold-dim);">
+              <div class="gt-tier t1">→</div>
+              <div class="gt-name" style="color:var(--gold);">You — Now</div>
+              <div class="gt-score you">34</div>
+              <div class="gt-badge current">Phase 1</div>
+            </div>
+            <div class="gt-row">
+              <div class="gt-tier t3">D</div>
+              <div class="gt-name">Early Stage</div>
+              <div class="gt-score">20–34</div>
+              <div class="gt-badge current" style="background:transparent;border-color:var(--border2);color:var(--muted);">Avg start</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE PROJECTION -->
+    <div class="projection">
+      <div class="projection-header">
+        <div class="projection-title">Score Projection by Phase</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);">Based on current trajectory</div>
+      </div>
+      <div class="projection-body">
+        <div class="proj-phase current">
+          <div class="proj-phase-tag active">Phase 1 · Now</div>
+          <div class="proj-score current">34</div>
+          <div class="proj-label">Foundation stage. Strong writing, thesis ahead of pace. Grants and conferences need immediate attention.</div>
+          <div class="proj-items">
+            <div class="proj-item done">Writing streak established</div>
+            <div class="proj-item done">Thesis Chapter 1 complete</div>
+            <div class="proj-item">Submit conference abstract</div>
+            <div class="proj-item">File first grant application</div>
+            <div class="proj-item">Reach 52 by Phase 1 end</div>
+          </div>
+        </div>
+        <div class="proj-phase">
+          <div class="proj-phase-tag">Phase 2 · Projected</div>
+          <div class="proj-score projected">52–65</div>
+          <div class="proj-label">Cross-pollination. First paper submitted, at least 1 conference attended, external collaborations active.</div>
+          <div class="proj-items">
+            <div class="proj-item">Submit systematic review paper</div>
+            <div class="proj-item">Present at 1 conference</div>
+            <div class="proj-item">Win 1 internal grant</div>
+            <div class="proj-item">3+ interdisciplinary collabs</div>
+          </div>
+        </div>
+        <div class="proj-phase">
+          <div class="proj-phase-tag">Phase 3 · Target</div>
+          <div class="proj-score projected">75+</div>
+          <div class="proj-label">Launch stage. Multiple publications in pipeline, fellowship applications filed, postdoc profile ready.</div>
+          <div class="proj-items">
+            <div class="proj-item">2+ Scopus papers published</div>
+            <div class="proj-item">International fellowship applied</div>
+            <div class="proj-item">Thesis submitted to committee</div>
+            <div class="proj-item">Postdoc / industry applications</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEXT ACTIONS TO BOOST SCORE -->
+    <div class="actions-section">
+      <div class="actions-header">
+        <div class="actions-title">Highest Impact Actions Right Now</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);">Sorted by CV Index points available</div>
+      </div>
+      <div class="actions-grid">
+        <div class="action-card">
+          <div class="action-impact">
+            <div class="impact-badge high">High Impact</div>
+            <div class="action-points">+8 pts</div>
+          </div>
+          <div class="action-name">Submit AMRS Conference Abstract</div>
+          <div class="action-desc">You already have the research. A 300-word abstract submission adds 8 points and puts your name in the African academic community immediately.</div>
+          <div class="action-deadline urgent">⚑ Overdue — was due 20 May</div>
+          <button class="action-btn" onclick="alert('Opening abstract submission workflow...')">Start Now →</button>
+        </div>
+        <div class="action-card">
+          <div class="action-impact">
+            <div class="impact-badge high">High Impact</div>
+            <div class="action-points">+8 pts</div>
+          </div>
+          <div class="action-name">Apply for UG Internal Research Grant</div>
+          <div class="action-desc">Applying — even if unsuccessful — adds 8 points and teaches grant mechanics. This is the easiest 8 points available to you right now.</div>
+          <div class="action-deadline urgent">⚑ Deadline: 30 Jun 2026</div>
+          <button class="action-btn" onclick="alert('Opening grants tracker...')">Start Application →</button>
+        </div>
+        <div class="action-card">
+          <div class="action-impact">
+            <div class="impact-badge high">High Impact</div>
+            <div class="action-points">+6 pts</div>
+          </div>
+          <div class="action-name">Convert Lit Review to Systematic Review Submission</div>
+          <div class="action-desc">Your literature review is 44% complete. At 60% the platform flags it for conversion. Push to 60% this week and unlock your first publication milestone.</div>
+          <div class="action-deadline">Target: this week</div>
+          <button class="action-btn" onclick="window.location.href='academic-engine-sprint.html'">Open Writing Sprint →</button>
+        </div>
+        <div class="action-card">
+          <div class="action-impact">
+            <div class="impact-badge medium">Medium Impact</div>
+            <div class="action-points">+4 pts</div>
+          </div>
+          <div class="action-name">Book Advisor Meeting via CRM</div>
+          <div class="action-desc">An overdue advisor meeting is blocking your admin score. Book it today, auto-generate the agenda, and close this gap.</div>
+          <div class="action-deadline urgent">⚑ Overdue — was due 21 May</div>
+          <button class="action-btn" onclick="alert('Opening Advisor CRM...')">Open CRM →</button>
+        </div>
+        <div class="action-card">
+          <div class="action-impact">
+            <div class="impact-badge medium">Medium Impact</div>
+            <div class="action-points">+3 pts</div>
+          </div>
+          <div class="action-name">Connect with 2 More Peer Grid Scholars</div>
+          <div class="action-desc">Your collaborations pillar is at 27%. Reaching out to 2 matched peers in your gap areas adds points and opens potential co-authorship paths.</div>
+          <div class="action-deadline">Ongoing</div>
+          <button class="action-btn" onclick="alert('Opening Peer Grid...')">Open Peer Grid →</button>
+        </div>
+        <div class="action-card">
+          <div class="action-impact">
+            <div class="impact-badge medium">Medium Impact</div>
+            <div class="action-points">+2 pts</div>
+          </div>
+          <div class="action-name">Hit 7-Day Writing Streak</div>
+          <div class="action-desc">You're on day 6. One more day of writing — even 15 minutes — completes your personal record and adds 2 consistency points.</div>
+          <div class="action-deadline">Tomorrow</div>
+          <button class="action-btn" onclick="window.location.href='academic-engine-sprint.html'">Start Sprint →</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- PILLAR DETAIL MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalContent">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Pillar Detail</div>
+      <button class="modal-close" onclick="document.getElementById('modal').classList.remove('open')">×</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <!-- filled dynamically -->
+    </div>
+  </div>
+</div>
+
+<script>
+  // Animate score arc on load
+  window.addEventListener('load', () => {
+    const arc = document.getElementById('scoreArc');
+    const circumference = 477.5;
+    const score = 34;
+    const offset = circumference * (1 - score / 100);
+    setTimeout(() => { arc.style.strokeDashoffset = offset; }, 300);
+  });
+
+  function closeModalOutside(e) {
+    if (e.target === document.getElementById('modal')) {
+      document.getElementById('modal').classList.remove('open');
+    }
+  }
+
+  const PILLAR_DATA = {
+    thesis: {
+      title: 'Thesis Progress — 14 / 20 pts',
+      score: 14, max: 20, color: 'var(--blue)',
+      items: [
+        { icon: '✅', name: 'Chapter 1 — Introduction', meta: 'Complete · submitted to supervisor', pts: '+4 pts' },
+        { icon: '🔄', name: 'Chapter 2 — Literature Review', meta: '44% drafted · Section 2.2 in progress', pts: '+3 pts' },
+        { icon: '⏳', name: 'Chapter 3 — Methodology', meta: 'Not started · due Phase 1 end', pts: '+0 pts' },
+        { icon: '⏳', name: 'Chapter 4 — Results', meta: 'Phase 2 milestone', pts: '+0 pts' },
+        { icon: '⏳', name: 'Supervisor approval: Ch. 1', meta: 'Awaiting confirmation', pts: '+3 pts' },
+      ],
+      tip: 'To maximise this pillar, push Chapter 2 past 60% this week. Supervisor approval of Chapter 1 is worth 3 additional points — follow up in your next CRM meeting.'
+    },
+    writing: {
+      title: 'Writing Consistency — 12 / 15 pts',
+      score: 12, max: 15, color: 'var(--gold)',
+      items: [
+        { icon: '🔥', name: '6-day writing streak (active)', meta: 'Personal record — keep going', pts: '+4 pts' },
+        { icon: '✅', name: '7 co-working sessions attended', meta: 'Sprint Room attendance this cohort', pts: '+3 pts' },
+        { icon: '📊', name: 'Word targets hit: 4 of 7', meta: '57% target completion rate', pts: '+2 pts' },
+        { icon: '⏳', name: 'Daily writing habit (7-day streak)', meta: 'One more day unlocks this', pts: '+3 pts' },
+      ],
+      tip: 'You\'re one sprint away from your best week. Hit your word target today and tomorrow to push this pillar to 15/15.'
+    },
+    publications: {
+      title: 'Publications — 2 / 25 pts',
+      score: 2, max: 25, color: 'var(--purple)',
+      items: [
+        { icon: '🔄', name: 'Systematic Review (ZnO Nanoparticles)', meta: '35% drafted · target: Journal of Nanomaterials', pts: 'In progress' },
+        { icon: '⏳', name: 'Short Communication — Phase 2', meta: 'Planned · methodology chapter output', pts: 'Planned' },
+        { icon: '⏳', name: 'First Scopus submission', meta: 'Phase 2 target — unlock at 60% lit review', pts: '+15 pts' },
+      ],
+      tip: 'Publications carry the most weight in this index (25 points). Your first Scopus submission unlocks 15 points immediately. Push your lit review to 60% to trigger the conversion flag.'
+    },
+    conferences: {
+      title: 'Conferences & Events — 2 / 15 pts',
+      score: 2, max: 15, color: 'var(--orange)',
+      items: [
+        { icon: '✅', name: 'Attended: Systematic Review Methods Seminar', meta: 'Virtual · May 2026', pts: '+2 pts' },
+        { icon: '❌', name: 'AMRS Abstract — OVERDUE', meta: 'Was due 20 May — submit immediately', pts: '+6 pts' },
+        { icon: '⏳', name: 'Present poster or lightning talk', meta: 'Phase 2 target', pts: '+5 pts' },
+        { icon: '⏳', name: 'Attend 1 international conference', meta: 'Phase 2–3 target', pts: '+7 pts' },
+      ],
+      tip: 'The AMRS abstract is your single fastest win right now. 300 words. You already have the research. Submit it today and earn 6 points immediately.'
+    },
+    collaborations: {
+      title: 'Collaborations — 4 / 15 pts',
+      score: 4, max: 15, color: 'var(--green)',
+      items: [
+        { icon: '✅', name: 'Week 1 partner: Efia (Civil Engineering)', meta: 'Accountability duo · completed', pts: '+1 pt' },
+        { icon: '✅', name: 'Week 2 partner: Kwame (Computer Science)', meta: 'Active this week', pts: '+1 pt' },
+        { icon: '🔄', name: 'Peer Grid connection: Ama (Data Science)', meta: 'Introduction sent · pending response', pts: '+1 pt' },
+        { icon: '⏳', name: 'Co-authorship on complementary paper', meta: 'Phase 2 target', pts: '+8 pts' },
+        { icon: '⏳', name: 'International collaboration established', meta: 'Phase 2–3 target', pts: '+4 pts' },
+      ],
+      tip: 'Your weekly partner rotations are building your network efficiently. Reach out to 2 more scholars in your gap areas this week — co-authorship is the highest-value collaboration action available.'
+    },
+    grants: {
+      title: 'Grants & Funding — 0 / 10 pts',
+      score: 0, max: 10, color: 'var(--red)',
+      items: [
+        { icon: '❌', name: 'No grant applications filed yet', meta: 'This is the most urgent gap in your profile', pts: '0 pts' },
+        { icon: '⚑', name: 'UG Internal Research Grant', meta: 'Deadline: 30 Jun 2026 · Up to GHS 5,000', pts: '+5 pts' },
+        { icon: '⏳', name: 'Carnegie African Diaspora Fellowship', meta: 'Deadline: 15 Aug 2026', pts: '+3 pts' },
+        { icon: '⏳', name: 'DAAD Research Stay — Germany', meta: 'Deadline: 31 Jul 2026', pts: '+7 pts' },
+      ],
+      tip: 'Applying for any grant — even if unsuccessful — immediately adds 5 points and teaches you mechanics for bigger awards. The UG Internal Grant is the easiest entry point. Start today.'
+    }
+  };
+
+  function openPillar(type) {
+    const data = PILLAR_DATA[type];
+    if (!data) return;
+    document.getElementById('modalTitle').textContent = data.title;
+    const pct = (data.score / data.max) * 100;
+
+    // Page links per pillar
+    const links = {
+      thesis: { label: 'Open Milestone Tracker →', href: 'academic-engine-milestones.html' },
+      writing: { label: 'Start Writing Sprint →', href: 'academic-engine-sprint.html' },
+      publications: { label: 'Open Publications Pipeline →', href: 'academic-engine-dashboard.html' },
+      conferences: { label: 'Open Opportunity Radar →', href: 'academic-engine-dashboard.html' },
+      collaborations: { label: 'Open Peer Grid →', href: 'academic-engine-dashboard.html' },
+      grants: { label: 'Open Grants Tracker →', href: 'academic-engine-dashboard.html' },
+    };
+    const link = links[type] || {};
+
+    let html = `
+      <div class="modal-score-row">
+        <div class="modal-score-big" style="color:${data.color};">${data.score}</div>
+        <div class="modal-score-info">
+          <div class="modal-score-name">${data.title.split('—')[0].trim()}</div>
+          <div class="modal-score-sub">${data.score} of ${data.max} points earned · ${Math.round(pct)}% complete</div>
+          <div style="height:3px;background:var(--border2);border-radius:2px;margin-top:0.6rem;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${data.color};border-radius:2px;transition:width 0.8s ease;"></div></div>
+        </div>
+        <button class="modal-add-btn" onclick="openLogForm('${type}')">+ Log Achievement</button>
+      </div>
+      <div class="modal-items-list">`;
+    data.items.forEach(item => {
+      html += `
+        <div class="modal-item">
+          <div class="modal-item-icon">${item.icon}</div>
+          <div class="modal-item-info">
+            <div class="modal-item-name">${item.name}</div>
+            <div class="modal-item-meta">${item.meta}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;">
+            <div class="modal-item-pts" style="color:${data.color};">${item.pts}</div>
+            ${item.icon === '⏳' ? `<button class="modal-action-link" onclick="document.getElementById('modal').classList.remove('open');window.location.href='${link.href || '#'}'">Add →</button>` : ''}
+          </div>
+        </div>`;
+    });
+    html += `</div>
+      <div class="modal-tip"><strong>How to improve this pillar</strong>${data.tip}</div>
+      <div style="margin-top:0.8rem;">
+        <a href="${link.href || '#'}" style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);text-decoration:none;border:1px solid rgba(201,168,76,0.3);padding:0.6rem 1.2rem;display:inline-block;transition:all 0.2s;" onmouseover="this.style.background='var(--gold-dim)'" onmouseout="this.style.background='transparent'">${link.label}</a>
+      </div>`;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('modal').classList.add('open');
+  }
+
+  // ── LOG ACHIEVEMENT FORM ──
+  function openLogForm(pillarType) {
+    document.getElementById('modal').classList.remove('open');
+    const categories = {
+      thesis: ['Chapter completed','Section drafted','Supervisor approval received','Thesis milestone hit'],
+      writing: ['Writing streak milestone','Sprint session completed','Word count target hit','Co-working session attended'],
+      publications: ['Paper submitted','Paper accepted','Paper published (Scopus)','Preprint posted','Abstract submitted'],
+      conferences: ['Abstract submitted','Poster presented','Talk delivered','Conference attended','Seminar attended'],
+      collaborations: ['Peer Grid connection made','Co-authorship started','International collaboration started','Mentorship session completed'],
+      grants: ['Grant application submitted','Grant awarded','Fellowship application submitted','Travel award received'],
+    };
+    const opts = (categories[pillarType] || ['Achievement logged']).map(o => `<option>${o}</option>`).join('');
+    const pillarName = pillarType.charAt(0).toUpperCase() + pillarType.slice(1);
+
+    document.getElementById('logModalTitle').textContent = 'Log ' + pillarName + ' Achievement';
+    document.getElementById('logCategorySelect').innerHTML = opts;
+    document.getElementById('logForm').dataset.pillar = pillarType;
+    document.getElementById('logModal').classList.add('open');
+  }
+
+  function closeLogModal() { document.getElementById('logModal').classList.remove('open'); }
+
+  function submitLogForm() {
+    const title = document.getElementById('logTitle').value.trim();
+    const category = document.getElementById('logCategorySelect').value;
+    const date = document.getElementById('logDate').value;
+    const notes = document.getElementById('logNotes').value.trim();
+    const pillar = document.getElementById('logForm').dataset.pillar;
+
+    if (!title) { alert('Please enter a title for this achievement.'); return; }
+
+    closeLogModal();
+
+    // Calculate points to award
+    const pointMap = { thesis: 3, writing: 2, publications: 8, conferences: 5, collaborations: 3, grants: 5 };
+    const pts = pointMap[pillar] || 2;
+
+    // Update score display
+    const currentScore = parseInt(document.getElementById('heroScoreNum').textContent);
+    const newScore = Math.min(100, currentScore + pts);
+    animateScore(currentScore, newScore);
+
+    // Show score update toast
+    showScoreToast(pts, title, pillar);
+
+    // Add to recent achievements
+    addToRecentAchievements(title, category, pts, pillar);
+  }
+
+  function animateScore(from, to) {
+    const el = document.getElementById('heroScoreNum');
+    const arc = document.getElementById('scoreArc');
+    const circumference = 477.5;
+    let current = from;
+    const step = setInterval(() => {
+      current++;
+      el.textContent = current;
+      arc.style.strokeDashoffset = circumference * (1 - current / 100);
+      if (current >= to) clearInterval(step);
+    }, 80);
+  }
+
+  function showScoreToast(pts, title, pillar) {
+    const toast = document.getElementById('scoreToast');
+    document.getElementById('scoreToastPts').textContent = '+' + pts + ' pts';
+    document.getElementById('scoreToastTitle').textContent = title;
+    document.getElementById('scoreToastPillar').textContent = pillar.charAt(0).toUpperCase() + pillar.slice(1) + ' pillar updated';
+    toast.classList.add('on');
+    setTimeout(() => toast.classList.remove('on'), 4500);
+  }
+
+  function addToRecentAchievements(title, category, pts, pillar) {
+    const list = document.getElementById('recentAchievements');
+    const existing = list.querySelector('.empty-state');
+    if (existing) existing.remove();
+    const item = document.createElement('div');
+    item.className = 'recent-item';
+    item.style.animation = 'fadeUp 0.4s ease';
+    item.innerHTML = `
+      <div class="recent-icon">✦</div>
+      <div class="recent-info">
+        <div class="recent-title">${title}</div>
+        <div class="recent-meta">${category} · ${pillar} pillar · just now</div>
+      </div>
+      <div class="recent-pts">+${pts}</div>`;
+    list.insertBefore(item, list.firstChild);
+  }
+
+  // ── COHORT RANKING ──
+  function buildRanking() {
+    const scholars = [
+      { name: 'You', score: 34, dept: 'Biomedical Eng', you: true },
+      { name: 'Ama', score: 38, dept: 'Materials Science', you: false },
+      { name: 'Kwame', score: 31, dept: 'Computer Science', you: false },
+      { name: 'Abena', score: 30, dept: 'Chemical Eng', you: false },
+      { name: 'Kofi', score: 28, dept: 'Civil Eng', you: false },
+      { name: 'Efia', score: 26, dept: 'Electrical Eng', you: false },
+      { name: 'Sena', score: 24, dept: 'Mech Eng', you: false },
+      { name: 'Ofori', score: 22, dept: 'Physics', you: false },
+    ].sort((a,b) => b.score - a.score);
+
+    const list = document.getElementById('rankingList');
+    list.innerHTML = '';
+    scholars.forEach((s, i) => {
+      const item = document.createElement('div');
+      item.className = 'rank-item' + (s.you ? ' rank-you' : '');
+      const maxScore = scholars[0].score;
+      item.innerHTML = `
+        <div class="rank-pos">${i+1}</div>
+        <div class="rank-name">${s.name}${s.you ? ' <span style="color:var(--gold);font-size:0.6rem;">(you)</span>' : ''}</div>
+        <div class="rank-dept">${s.dept}</div>
+        <div class="rank-bar-wrap">
+          <div class="rank-bar-track">
+            <div class="rank-bar-fill" style="width:${(s.score/50)*100}%;background:${s.you ? 'var(--gold)' : 'var(--border2)'};"></div>
+          </div>
+        </div>
+        <div class="rank-score" style="color:${s.you ? 'var(--gold)' : 'var(--muted2)'};">${s.score}</div>`;
+      list.appendChild(item);
+    });
+  }
+
+  // init ranking on load
+  window.addEventListener('load', () => {
+    buildRanking();
+    // animate score arc
+    const arc = document.getElementById('scoreArc');
+    setTimeout(() => { arc.style.strokeDashoffset = 477.5 * (1 - 34/100); }, 300);
+  });
+</script>
+
+<!-- ── STYLES FOR NEW FEATURES ── -->
+<style>
+  /* SCORE UPDATE TOAST */
+  .score-toast { position: fixed; top: 5rem; right: 1.5rem; z-index: 300; background: var(--card); border: 1px solid var(--gold); border-left: 3px solid var(--gold); padding: 1rem 1.4rem; max-width: 300px; transform: translateX(120%); opacity: 0; transition: all 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  .score-toast.on { transform: translateX(0); opacity: 1; }
+  .score-toast-pts { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 900; color: var(--gold); line-height: 1; }
+  .score-toast-title { font-size: 0.82rem; color: var(--cream); margin-top: 0.3rem; line-height: 1.4; }
+  .score-toast-pillar { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 0.2rem; }
+
+  /* LOG ACHIEVEMENT MODAL */
+  .log-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 400; display: none; align-items: center; justify-content: center; padding: 2rem; }
+  .log-modal-overlay.open { display: flex; }
+  .log-modal { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); width: 100%; max-width: 520px; animation: slideUp 0.3s ease; }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+  .log-modal-header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .log-modal-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+  .log-modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
+  .log-modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .log-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; display: block; }
+  .log-input, .log-select, .log-textarea { width: 100%; background: var(--deep); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 0.75rem 0.9rem; outline: none; transition: border-color 0.2s; appearance: none; }
+  .log-input:focus, .log-select:focus, .log-textarea:focus { border-color: var(--gold); }
+  .log-textarea { min-height: 70px; resize: vertical; }
+  .log-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+  .log-modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 0.8rem; justify-content: flex-end; }
+  .log-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.7rem 1.4rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+  .log-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .log-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+  .log-btn.primary:hover { background: var(--gold-light); }
+
+  /* MODAL ACTION LINK */
+  .modal-action-link { font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.15rem 0.5rem; border: 1px solid var(--border2); background: transparent; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .modal-action-link:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* RECENT ACHIEVEMENTS */
+  .recent-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.8rem 1rem; background: var(--deep); border: 1px solid var(--border); border-left: 2px solid var(--gold); }
+  .recent-icon { color: var(--gold); font-size: 0.9rem; flex-shrink: 0; margin-top: 0.1rem; }
+  .recent-info { flex: 1; }
+  .recent-title { font-size: 0.82rem; color: var(--cream); }
+  .recent-meta { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); margin-top: 0.15rem; letter-spacing: 0.08em; }
+  .recent-pts { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--gold); flex-shrink: 0; }
+  .empty-state { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); text-align: center; padding: 0.8rem; }
+
+  /* COHORT RANKING */
+  .rank-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0.8rem; background: var(--deep); border: 1px solid var(--border); margin-bottom: 0.4rem; transition: border-color 0.15s; }
+  .rank-item.rank-you { border-color: rgba(201,168,76,0.3); background: var(--gold-dim); }
+  .rank-pos { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); width: 18px; flex-shrink: 0; text-align: center; }
+  .rank-name { font-size: 0.8rem; color: var(--cream); width: 60px; flex-shrink: 0; }
+  .rank-dept { font-family: 'DM Mono', monospace; font-size: 0.52rem; color: var(--muted); flex: 1; }
+  .rank-bar-wrap { width: 100px; flex-shrink: 0; }
+  .rank-bar-track { height: 4px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+  .rank-bar-fill { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
+  .rank-score { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
+
+  /* HOW SCORING WORKS */
+  .scoring-table { width: 100%; }
+  .st-row { display: flex; align-items: center; gap: 0.8rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+  .st-row:last-child { border-bottom: none; }
+  .st-pillar { display: flex; align-items: center; gap: 0.5rem; flex: 1; }
+  .st-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .st-name { font-size: 0.8rem; color: var(--cream); }
+  .st-weight { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted2); width: 50px; text-align: right; }
+  .st-examples { font-family: 'DM Mono', monospace; font-size: 0.52rem; color: var(--muted); flex: 1; line-height: 1.5; }
+
+  /* ELITE BEHAVIOUR GAP */
+  .behaviour-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); }
+  .behaviour-card { background: var(--deep); padding: 1.3rem; }
+  .beh-icon { font-size: 1.2rem; margin-bottom: 0.7rem; }
+  .beh-title { font-size: 0.85rem; color: var(--cream); font-weight: 500; margin-bottom: 0.4rem; line-height: 1.4; }
+  .beh-gap { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.8rem; }
+  .beh-row { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.75rem; line-height: 1.5; }
+  .beh-label { font-family: 'DM Mono', monospace; font-size: 0.5rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.4rem; border: 1px solid; flex-shrink: 0; margin-top: 0.1rem; }
+  .beh-label.elite { border-color: rgba(76,175,125,0.4); color: var(--green); }
+  .beh-label.you { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+  .beh-action { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); cursor: pointer; border: 1px solid rgba(201,168,76,0.3); padding: 0.3rem 0.6rem; display: inline-block; transition: all 0.15s; }
+  .beh-action:hover { background: var(--gold-dim); }
+
+  /* EXPORT MODAL */
+  .export-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 400; display: none; align-items: center; justify-content: center; padding: 2rem; }
+  .export-modal-overlay.open { display: flex; }
+  .export-modal { background: var(--card); border: 1px solid var(--border); border-top: 2px solid var(--gold); width: 100%; max-width: 680px; max-height: 85vh; overflow-y: auto; }
+  .export-header { padding: 1.3rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .export-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+  .export-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.1rem; }
+  .export-body { padding: 2rem; }
+  /* CV PROFILE PREVIEW */
+  .cv-preview { background: #fff; color: #1a1a1a; padding: 2rem; font-family: 'DM Sans', sans-serif; }
+  .cv-name { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; color: #1a1a1a; }
+  .cv-title { font-size: 0.85rem; color: #555; margin-top: 0.2rem; }
+  .cv-divider { height: 2px; background: #c9a84c; margin: 1rem 0; }
+  .cv-section { margin-bottom: 1.2rem; }
+  .cv-section-title { font-family: 'DM Mono', sans-serif; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: #c9a84c; margin-bottom: 0.6rem; }
+  .cv-score-row { display: flex; align-items: center; gap: 1rem; }
+  .cv-score-big { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 900; color: #c9a84c; }
+  .cv-score-info { font-size: 0.8rem; color: #555; line-height: 1.5; }
+  .cv-item { font-size: 0.82rem; color: #333; padding: 0.3rem 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+  .cv-item-pts { font-family: 'DM Mono', sans-serif; font-size: 0.6rem; color: #c9a84c; }
+  .export-actions { display: flex; gap: 0.8rem; padding: 1rem 2rem; border-top: 1px solid var(--border); }
+  .exp-btn { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.7rem 1.4rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); cursor: pointer; transition: all 0.2s; }
+  .exp-btn:hover { border-color: var(--gold); color: var(--gold); }
+  .exp-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); }
+  .exp-btn.primary:hover { background: var(--gold-light); }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+  @media(max-width:900px){ .behaviour-grid{grid-template-columns:1fr;} .log-row{grid-template-columns:1fr;} }
+</style>
+
+<!-- SCORE UPDATE TOAST -->
+<div class="score-toast" id="scoreToast">
+  <div class="score-toast-pts" id="scoreToastPts">+5 pts</div>
+  <div class="score-toast-title" id="scoreToastTitle">Achievement logged</div>
+  <div class="score-toast-pillar" id="scoreToastPillar">CV Index updated</div>
+</div>
+
+<!-- LOG ACHIEVEMENT MODAL -->
+<div class="log-modal-overlay" id="logModal" onclick="if(event.target===this)closeLogModal()">
+  <div class="log-modal">
+    <div class="log-modal-header">
+      <div class="log-modal-title" id="logModalTitle">Log Achievement</div>
+      <button class="log-modal-close" onclick="closeLogModal()">×</button>
+    </div>
+    <div class="log-modal-body" id="logForm" data-pillar="thesis">
+      <div>
+        <label class="log-label">Achievement Title</label>
+        <input class="log-input" type="text" id="logTitle" placeholder="e.g. Submitted abstract to AMRS 2026"/>
+      </div>
+      <div class="log-row">
+        <div>
+          <label class="log-label">Category</label>
+          <select class="log-select" id="logCategorySelect"></select>
+        </div>
+        <div>
+          <label class="log-label">Date</label>
+          <input class="log-input" type="date" id="logDate" style="color-scheme:dark;"/>
+        </div>
+      </div>
+      <div>
+        <label class="log-label">Evidence / Notes (optional)</label>
+        <textarea class="log-textarea" id="logNotes" placeholder="e.g. Submission confirmation number, journal name, collaborator name..."></textarea>
+      </div>
+      <div style="background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);padding:0.8rem 1rem;font-size:0.75rem;color:var(--text);line-height:1.6;">
+        ✦ Logging this achievement will update your CV Index score in real time and notify your accountability partner.
+      </div>
+    </div>
+    <div class="log-modal-footer">
+      <button class="log-btn" onclick="closeLogModal()">Cancel</button>
+      <button class="log-btn primary" onclick="submitLogForm()">Log Achievement & Update Score →</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="export-modal-overlay" id="exportModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="export-modal">
+    <div class="export-header">
+      <div class="export-title">Export CV Profile</div>
+      <button class="export-close" onclick="document.getElementById('exportModal').classList.remove('open')">×</button>
+    </div>
+    <div class="export-body">
+      <div class="cv-preview" id="cvPreview">
+        <div class="cv-name">Your Name</div>
+        <div class="cv-title">PhD Candidate · Biomedical Engineering · University of Ghana</div>
+        <div class="cv-divider"></div>
+        <div class="cv-section">
+          <div class="cv-section-title">CV Competitiveness Index</div>
+          <div class="cv-score-row">
+            <div class="cv-score-big" id="cvScoreNum">34</div>
+            <div class="cv-score-info">/ 100 · Phase 1 — Emerging Scholar<br/>Cohort average: 28 · Graduation target: 75+<br/>Generated by The Academic Engine · May 2026</div>
+          </div>
+        </div>
+        <div class="cv-section">
+          <div class="cv-section-title">Thesis Progress</div>
+          <div class="cv-item"><span>Chapter 1 — Introduction (Complete)</span><span class="cv-item-pts">+4 pts</span></div>
+          <div class="cv-item"><span>Chapter 2 — Literature Review (44% drafted)</span><span class="cv-item-pts">In progress</span></div>
+        </div>
+        <div class="cv-section">
+          <div class="cv-section-title">Publications Pipeline</div>
+          <div class="cv-item"><span>Green Synthesis of ZnO Nanoparticles: A Systematic Review (Drafting)</span><span class="cv-item-pts">Target: J. Nanomaterials</span></div>
+        </div>
+        <div class="cv-section">
+          <div class="cv-section-title">Writing Consistency</div>
+          <div class="cv-item"><span>6-day active streak · 7 co-working sessions · 12/15 pts</span><span class="cv-item-pts">Excellent</span></div>
+        </div>
+        <div class="cv-section">
+          <div class="cv-section-title">Collaborations</div>
+          <div class="cv-item"><span>2 interdisciplinary weekly partners · 1 peer grid connection</span><span class="cv-item-pts">Growing</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="export-actions">
+      <button class="exp-btn" onclick="document.getElementById('exportModal').classList.remove('open')">Close</button>
+      <button class="exp-btn" onclick="alert('Copying profile link...')">Copy Share Link</button>
+      <button class="exp-btn primary" onclick="window.print()">Print / Save as PDF →</button>
+    </div>
+  </div>
+</div>
+
+<!-- INJECT NEW SECTIONS INTO PAGE -->
+<script>
+  // Wire up topbar buttons
+  document.querySelector('.tb-btn:not(.primary)').onclick = () => openLogForm('thesis');
+  document.querySelector('.tb-btn.primary').onclick = () => document.getElementById('exportModal').classList.add('open');
+
+  // Inject Recent Achievements section after actions
+  document.addEventListener('DOMContentLoaded', () => {
+    const content = document.querySelector('.content');
+
+    // ── RECENT ACHIEVEMENTS ──
+    const recentSection = document.createElement('div');
+    recentSection.style.cssText = 'background:var(--card);border:1px solid var(--border);';
+    recentSection.innerHTML = `
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);">Recent Achievements</div>
+        <button onclick="openLogForm('thesis')" style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.4rem 0.9rem;border:1px solid rgba(201,168,76,0.3);background:transparent;color:var(--gold);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='var(--gold-dim)'" onmouseout="this.style.background='transparent'">+ Log Achievement</button>
+      </div>
+      <div style="padding:1.2rem 1.5rem;">
+        <div id="recentAchievements">
+          <div class="empty-state">No achievements logged yet — use the button above to log your first one</div>
+        </div>
+      </div>`;
+    content.appendChild(recentSection);
+
+    // ── COHORT RANKING ──
+    const rankSection = document.createElement('div');
+    rankSection.style.cssText = 'background:var(--card);border:1px solid var(--border);';
+    rankSection.innerHTML = `
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);">Cohort Ranking — Anonymous</div>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);">You are 3rd of 20 scholars</div>
+      </div>
+      <div style="padding:1.2rem 1.5rem;">
+        <div style="font-size:0.78rem;color:var(--muted2);margin-bottom:1rem;line-height:1.6;">Rankings are shared within the cohort to build healthy momentum — not competition. All scholars are identified by name and department only.</div>
+        <div id="rankingList"></div>
+      </div>`;
+    content.appendChild(rankSection);
+
+    // ── HOW SCORING WORKS ──
+    const scoringSection = document.createElement('div');
+    scoringSection.style.cssText = 'background:var(--card);border:1px solid var(--border);';
+    scoringSection.innerHTML = `
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);">
+        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);">How Your Score Is Calculated</div>
+      </div>
+      <div style="padding:1.5rem;">
+        <div style="font-size:0.82rem;color:var(--muted2);margin-bottom:1.2rem;line-height:1.7;">Your CV Index is the sum of six pillars, each weighted by how much they impact your competitiveness as a graduating scholar. Every specific action has an exact point value — nothing is vague.</div>
+        <div class="scoring-table">
+          <div class="st-row"><div class="st-pillar"><div class="st-dot" style="background:var(--blue);"></div><div class="st-name">Thesis Progress</div></div><div class="st-weight" style="color:var(--blue);">20 pts</div><div class="st-examples">+4 per chapter · +3 supervisor approval · +2 milestone streak</div></div>
+          <div class="st-row"><div class="st-pillar"><div class="st-dot" style="background:var(--gold);"></div><div class="st-name">Writing Consistency</div></div><div class="st-weight" style="color:var(--gold);">15 pts</div><div class="st-examples">+4 weekly streak · +2 per sprint session · +1 word target hit</div></div>
+          <div class="st-row"><div class="st-pillar"><div class="st-dot" style="background:var(--purple);"></div><div class="st-name">Publications</div></div><div class="st-weight" style="color:var(--purple);">25 pts</div><div class="st-examples">+15 Scopus paper · +8 submission · +5 abstract · +2 preprint</div></div>
+          <div class="st-row"><div class="st-pillar"><div class="st-dot" style="background:var(--orange);"></div><div class="st-name">Conferences</div></div><div class="st-weight" style="color:var(--orange);">15 pts</div><div class="st-examples">+7 international · +5 poster/talk · +6 abstract · +2 seminar</div></div>
+          <div class="st-row"><div class="st-pillar"><div class="st-dot" style="background:var(--green);"></div><div class="st-name">Collaborations</div></div><div class="st-weight" style="color:var(--green);">15 pts</div><div class="st-examples">+8 co-authorship · +4 international collab · +1 weekly partner · +2 peer grid</div></div>
+          <div class="st-row"><div class="st-pillar"><div class="st-dot" style="background:var(--red);"></div><div class="st-name">Grants & Funding</div></div><div class="st-weight" style="color:var(--red);">10 pts</div><div class="st-examples">+7 grant awarded · +5 application filed · +3 travel award · +2 shortlisted</div></div>
+        </div>
+      </div>`;
+    content.appendChild(scoringSection);
+
+    // ── ELITE BEHAVIOUR GAP ──
+    const behaviourSection = document.createElement('div');
+    behaviourSection.style.cssText = 'background:var(--card);border:1px solid var(--border);';
+    behaviourSection.innerHTML = `
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);">
+        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--gold);">What Elite Phase 1 Scholars Do Differently</div>
+      </div>
+      <div style="padding:1rem 1.5rem 0.5rem;font-size:0.82rem;color:var(--muted2);line-height:1.7;">Based on research into top-performing graduate scholars at MIT, Oxford, and Stanford — and what separates them from average students at the same stage you're in now.</div>
+      <div class="behaviour-grid" style="margin:0 1px 1px;">
+        <div class="behaviour-card">
+          <div class="beh-icon">✍️</div>
+          <div class="beh-title">They write every single day — even for 15 minutes</div>
+          <div class="beh-gap">
+            <div class="beh-row"><div class="beh-label elite">Elite</div><span>Daily writing as a non-negotiable discipline. Not inspiration-dependent.</span></div>
+            <div class="beh-row"><div class="beh-label you">You</div><span>6-day streak — strong. One more day closes the gap.</span></div>
+          </div>
+          <div class="beh-action" onclick="window.location.href='academic-engine-sprint.html'">Start Sprint →</div>
+        </div>
+        <div class="behaviour-card">
+          <div class="beh-icon">📄</div>
+          <div class="beh-title">They convert their lit review into a publication immediately</div>
+          <div class="beh-gap">
+            <div class="beh-row"><div class="beh-label elite">Elite</div><span>Literature review drafted as a Systematic Review paper from day one.</span></div>
+            <div class="beh-row"><div class="beh-label you">You</div><span>Lit review at 44%. Push to 60% to trigger the conversion flag.</span></div>
+          </div>
+          <div class="beh-action" onclick="window.location.href='academic-engine-sprint.html'">Write Now →</div>
+        </div>
+        <div class="behaviour-card">
+          <div class="beh-icon">👤</div>
+          <div class="beh-title">They manage their advisor like a board of directors</div>
+          <div class="beh-gap">
+            <div class="beh-label elite">Elite</div><span>Enter every meeting with a tight agenda. Log outcomes. Follow up immediately.</span></div>
+            <div class="beh-row"><div class="beh-label you">You</div><span>Advisor meeting overdue by 8 days. CRM agenda not generated yet.</span></div>
+          </div>
+          <div class="beh-action" onclick="window.location.href='academic-engine-dashboard.html'">Open CRM →</div>
+        </div>
+        <div class="behaviour-card">
+          <div class="beh-icon">💰</div>
+          <div class="beh-title">They apply for grants early — even small internal ones</div>
+          <div class="beh-gap">
+            <div class="beh-row"><div class="beh-label elite">Elite</div><span>Apply for 1 internal grant in Phase 1, regardless of whether they need the money.</span></div>
+            <div class="beh-row"><div class="beh-label you">You</div><span>0 applications filed. UG Internal Grant deadline is 30 Jun.</span></div>
+          </div>
+          <div class="beh-action" onclick="openLogForm('grants')">Log Application →</div>
+        </div>
+        <div class="behaviour-card">
+          <div class="beh-icon">🌍</div>
+          <div class="beh-title">They build interdisciplinary networks from Phase 1</div>
+          <div class="beh-gap">
+            <div class="beh-row"><div class="beh-label elite">Elite</div><span>Actively seek co-authors outside their department. Cold-email researchers they cite.</span></div>
+            <div class="beh-row"><div class="beh-label you">You</div><span>2 weekly partners. 1 peer grid connection pending. Growing well.</span></div>
+          </div>
+          <div class="beh-action" onclick="window.location.href='academic-engine-dashboard.html'">Open Peer Grid →</div>
+        </div>
+        <div class="behaviour-card">
+          <div class="beh-icon">🎤</div>
+          <div class="beh-title">They submit conference abstracts before feeling ready</div>
+          <div class="beh-gap">
+            <div class="beh-row"><div class="beh-label elite">Elite</div><span>Submit a Phase 1 abstract even with preliminary data. Feedback sharpens thinking.</span></div>
+            <div class="beh-row"><div class="beh-label you">You</div><span>AMRS abstract overdue. You have the research. Submit today.</span></div>
+          </div>
+          <div class="beh-action" onclick="openLogForm('conferences')">Log Submission →</div>
+        </div>
+      </div>`;
+    content.appendChild(behaviourSection);
+  });
+</script>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo</span>
+    <a href="index.html" class="dnav-link">Home</a>
+    <a href="academic-engine-landing.html" class="dnav-link">Landing</a>
+    <a href="academic-engine-onboarding.html" class="dnav-link">Onboarding</a>
+    <a href="academic-engine-dashboard.html" class="dnav-link">Dashboard</a>
+    <a href="academic-engine-milestones.html" class="dnav-link">Milestones</a>
+    <a href="academic-engine-sprint.html" class="dnav-link">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" class="dnav-link">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem 0.5rem;margin-left:0.2rem;">✕</button>
+  </div>
+  <style>
+    .dnav-link { font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s; }
+    .dnav-link:hover { border-color:#c9a84c;color:#c9a84c; }
+  </style>
+
+</body>
+</html>

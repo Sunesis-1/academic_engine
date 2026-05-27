@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808; --deep: #0e0e0e; --card: #141414; --border: #222;
+      --gold: #c9a84c; --gold-light: #e8c87a; --gold-dim: rgba(201,168,76,0.12);
+      --cream: #f5f0e8; --muted: #555; --muted2: #777; --text: #d0cbc3;
+      --green: #4caf7d; --blue: #5c8fe0;
+    }
+    html, body { height: 100%; }
+    body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; overflow-x: hidden; }
+
+    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; }
+
+    .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 100%); }
+    .glow { position: fixed; top: -10%; left: 50%; transform: translateX(-50%); width: 600px; height: 400px; background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 70%); pointer-events: none; }
+
+    .wrap { position: relative; z-index: 1; width: 100%; max-width: 900px; text-align: center; }
+
+    .badge { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(201,168,76,0.3); padding: 0.4rem 1rem; margin-bottom: 2rem; }
+    .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+
+    h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 7vw, 5.5rem); font-weight: 900; color: var(--cream); line-height: 1; margin-bottom: 1rem; }
+    h1 em { font-style: italic; color: var(--gold); }
+
+    .sub { font-size: 1rem; color: var(--muted2); max-width: 540px; margin: 0 auto 3rem; line-height: 1.7; }
+
+    /* PAGES GRID */
+    .pages-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); margin-bottom: 2.5rem; text-align: left; }
+
+    .page-card { background: var(--card); padding: 1.5rem; text-decoration: none; display: block; transition: background 0.15s; position: relative; overflow: hidden; border: 2px solid transparent; }
+    .page-card:hover { background: var(--deep); border-color: var(--gold); }
+    .page-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+    .page-card:hover::before { transform: scaleX(1); }
+    .page-card.featured { background: var(--gold-dim); border-color: rgba(201,168,76,0.3); }
+
+    .page-num { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; opacity: 0.7; }
+    .page-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--cream); margin-bottom: 0.4rem; }
+    .page-desc { font-size: 0.75rem; color: var(--muted2); line-height: 1.6; }
+    .page-status { margin-top: 0.8rem; font-family: 'DM Mono', monospace; font-size: 0.52rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); display: flex; align-items: center; gap: 0.3rem; }
+    .page-status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+    /* USER FLOW */
+    .flow { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 2.5rem; flex-wrap: wrap; }
+    .flow-step { display: flex; align-items: center; }
+    .flow-node { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.4rem 0.8rem; border: 1px solid var(--border); background: var(--card); color: var(--muted2); white-space: nowrap; }
+    .flow-arrow { font-size: 0.7rem; color: var(--gold); padding: 0 0.3rem; }
+
+    /* MAIN CTA */
+    .cta-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { font-family: 'DM Mono', monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--black); background: var(--gold); border: none; padding: 1rem 2.5rem; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+    .btn-secondary { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted2); background: transparent; border: 1px solid var(--border); padding: 0.9rem 2rem; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block; }
+    .btn-secondary:hover { border-color: var(--gold); color: var(--gold); }
+
+    .footer-note { margin-top: 3rem; font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+    @media(max-width:700px){ .pages-grid{grid-template-columns:1fr;} .flow{gap:0.3rem;} .flow-arrow{display:none;} }
+  </style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="glow"></div>
+
+<div class="wrap">
+  <div class="badge">Founding Cohort · Africa · 2026</div>
+
+  <h1>The Academic<br/><em>Engine.</em></h1>
+  <p class="sub">A structured research accelerator for ambitious postgraduate scholars. Starting in Ghana. Built for Africa. Scaling to the world.</p>
+
+  <!-- USER FLOW -->
+  <div class="flow">
+    <div class="flow-step"><div class="flow-node">Landing</div><div class="flow-arrow">→</div></div>
+    <div class="flow-step"><div class="flow-node">Apply</div><div class="flow-arrow">→</div></div>
+    <div class="flow-step"><div class="flow-node">Onboarding</div><div class="flow-arrow">→</div></div>
+    <div class="flow-step"><div class="flow-node">Dashboard</div><div class="flow-arrow">→</div></div>
+    <div class="flow-step"><div class="flow-node">Build · Track · Publish</div></div>
+  </div>
+
+  <!-- PAGES GRID -->
+  <div class="pages-grid">
+    <a href="academic-engine-landing.html" class="page-card featured">
+      <div class="page-num">01 · Public</div>
+      <div class="page-name">Landing Page</div>
+      <div class="page-desc">The founding cohort recruitment page. For your Dean pitch and public applications.</div>
+      <div class="page-status">Live · Share this link</div>
+    </a>
+    <a href="academic-engine-onboarding.html" class="page-card">
+      <div class="page-num">02 · Accepted Scholars</div>
+      <div class="page-name">Onboarding Flow</div>
+      <div class="page-desc">5-step setup — research profile, skills matrix, goal setting, commitment contract, and first partner match.</div>
+      <div class="page-status">Live · 5 steps</div>
+    </a>
+    <a href="academic-engine-dashboard.html" class="page-card">
+      <div class="page-num">03 · Scholar Home</div>
+      <div class="page-name">Scholar Dashboard</div>
+      <div class="page-desc">The main hub — CV Index rings, weekly map, milestones, advisor CRM, resources, and cohort board.</div>
+      <div class="page-status">Live · Full featured</div>
+    </a>
+    <a href="academic-engine-milestones.html" class="page-card">
+      <div class="page-num">04 · Daily Work</div>
+      <div class="page-name">Milestone Tracker</div>
+      <div class="page-desc">Phase-gated milestone management with sub-tasks, duo visibility, templates, streak calendar, and smart insights.</div>
+      <div class="page-status">Live · Full featured</div>
+    </a>
+    <a href="academic-engine-sprint.html" class="page-card">
+      <div class="page-num">05 · Deep Work</div>
+      <div class="page-name">Writing Sprint Room</div>
+      <div class="page-desc">Immersive writing environment — Pomodoro timer, live co-working room, adaptive prompts, reflection capture.</div>
+      <div class="page-status">Live · Full featured</div>
+    </a>
+    <a href="academic-engine-cv-index.html" class="page-card">
+      <div class="page-num">06 · Career Engine</div>
+      <div class="page-name">CV Index</div>
+      <div class="page-desc">Live academic profile score across 6 pillars — with cohort ranking, phase projections, and elite behaviour gaps.</div>
+      <div class="page-status">Live · Full featured</div>
+    </a>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-row">
+    <a href="academic-engine-landing.html" class="btn-primary">View Landing Page →</a>
+    <a href="academic-engine-dashboard.html" class="btn-secondary">Open Scholar Dashboard →</a>
+  </div>
+
+  <div class="footer-note">The Academic Engine · Founding Cohort 2026 · Starting in Ghana · Built for Africa</div>
+</div>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo</span>
+    <a href="index.html" class="dnav-link">Home</a>
+    <a href="academic-engine-landing.html" class="dnav-link">Landing</a>
+    <a href="academic-engine-onboarding.html" class="dnav-link">Onboarding</a>
+    <a href="academic-engine-dashboard.html" class="dnav-link">Dashboard</a>
+    <a href="academic-engine-milestones.html" class="dnav-link">Milestones</a>
+    <a href="academic-engine-sprint.html" class="dnav-link">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" class="dnav-link">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem 0.5rem;margin-left:0.2rem;">✕</button>
+  </div>
+  <style>
+    .dnav-link { font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s; }
+    .dnav-link:hover { border-color:#c9a84c;color:#c9a84c; }
+  </style>
+
+</body>
+</html>

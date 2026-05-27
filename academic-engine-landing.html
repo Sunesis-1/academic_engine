@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine — Founding Cohort</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #080808;
+      --deep: #0e0e0e;
+      --card: #141414;
+      --border: #222;
+      --gold: #c9a84c;
+      --gold-light: #e8c87a;
+      --cream: #f5f0e8;
+      --muted: #666;
+      --text: #d8d3cb;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 4rem;
+      background: rgba(8,8,8,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* ── SCROLL PROGRESS BAR ── */
+    .scroll-progress {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: var(--gold);
+      z-index: 200;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* ── MOBILE NAV ANCHORS ── */
+    .nav-anchors {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    .nav-anchor {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-anchor:hover { color: var(--gold); }
+
+    .nav-cta {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--gold);
+      border: none;
+      padding: 0.6rem 1.4rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+    .nav-cta:hover { background: var(--gold-light); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 10rem 4rem 6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 20%; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cohort-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.3);
+      padding: 0.4rem 1rem;
+      margin-bottom: 2.5rem;
+      width: fit-content;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .cohort-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 8vw, 7.5rem);
+      font-weight: 900;
+      line-height: 0.95;
+      color: var(--cream);
+      max-width: 900px;
+      animation: fadeUp 0.8s ease 0.1s both;
+    }
+
+    .hero h1 em { font-style: italic; color: var(--gold); }
+
+    .hero-sub {
+      margin-top: 2rem;
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+      animation: fadeUp 0.8s ease 0.2s both;
+    }
+
+    .hero-actions {
+      margin-top: 3rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
+
+    .btn-primary {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--gold);
+      border: none;
+      padding: 1rem 2.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+    .hero-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+
+    .hero-stat-row {
+      display: flex;
+      gap: 4rem;
+      margin-top: 6rem;
+      padding-top: 3rem;
+      border-top: 1px solid var(--border);
+      animation: fadeUp 0.8s ease 0.4s both;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .hero-stat p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── FOUNDER NOTE ── */
+    .founder {
+      padding: 7rem 4rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 6rem;
+      align-items: center;
+      background: var(--deep);
+    }
+
+    .founder-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.2rem;
+    }
+
+    .founder-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, #8a6e2f 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--black);
+      border: 2px solid rgba(201,168,76,0.4);
+    }
+
+    .founder-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--cream);
+      font-weight: 700;
+    }
+
+    .founder-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      line-height: 1.6;
+    }
+
+    .founder-right blockquote {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      font-style: italic;
+      color: var(--cream);
+      line-height: 1.6;
+      border-left: 3px solid var(--gold);
+      padding-left: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .founder-right p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 560px;
+    }
+
+    /* ── MIRROR SECTION ── */
+    .mirror {
+      padding: 8rem 4rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: start;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+
+    .mirror-left h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.2;
+    }
+
+    .mirror-left h2 em { font-style: italic; color: var(--gold); }
+
+    .pain-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      margin-top: 1rem;
+    }
+
+    .pain-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1.2rem 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .pain-item:hover { border-left-color: var(--gold-light); background: #1a1a1a; }
+
+    .pain-icon { font-size: 1.2rem; margin-top: 0.1rem; flex-shrink: 0; }
+
+    .pain-item p { font-size: 0.9rem; line-height: 1.6; color: var(--text); }
+
+    .pain-item strong {
+      display: block;
+      color: var(--cream);
+      font-weight: 500;
+      margin-bottom: 0.2rem;
+      font-size: 0.85rem;
+    }
+
+    /* ── SOCIAL PROOF ── */
+    .voices {
+      padding: 7rem 4rem;
+      border-top: 1px solid var(--border);
+      background: var(--deep);
+    }
+
+    .voices-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+    }
+
+    .voices-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      color: var(--cream);
+      font-weight: 700;
+    }
+
+    .voices-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+      text-align: right;
+      max-width: 200px;
+      line-height: 1.7;
+    }
+
+    .voices-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .voice-card {
+      background: var(--card);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .voice-card blockquote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--cream);
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    .voice-card blockquote::before {
+      content: '"';
+      font-size: 2rem;
+      color: var(--gold);
+      line-height: 0;
+      vertical-align: -0.4em;
+      margin-right: 0.2rem;
+    }
+
+    .voice-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 8rem 4rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .features-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 4rem;
+    }
+
+    .features-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--cream);
+      max-width: 500px;
+      line-height: 1.2;
+    }
+
+    .features-header p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      max-width: 280px;
+      text-align: right;
+      line-height: 1.7;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .feature-card {
+      background: var(--card);
+      padding: 2.5rem;
+      transition: background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover { background: #1c1c1c; }
+    .feature-card:hover::before { transform: scaleX(1); }
+
+    .feature-number {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      opacity: 0.7;
+    }
+
+    .feature-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--cream);
+      margin-bottom: 0.8rem;
+      font-weight: 700;
+    }
+
+    .feature-card p { font-size: 0.85rem; line-height: 1.7; color: var(--muted); }
+
+    /* ── WHAT HAPPENS NEXT ── */
+    .onboarding {
+      padding: 8rem 4rem;
+      border-top: 1px solid var(--border);
+      background: var(--deep);
+    }
+
+    .onboarding h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 1rem;
+      max-width: 500px;
+      line-height: 1.2;
+    }
+
+    .onboarding-sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 4rem;
+      max-width: 460px;
+      line-height: 1.7;
+    }
+
+    .onboarding-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    .onboarding-steps::before {
+      content: '';
+      position: absolute;
+      top: 1.5rem;
+      left: 5%;
+      right: 5%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .onboarding-step {
+      padding: 0 1.5rem;
+      padding-top: 0;
+      text-align: center;
+    }
+
+    .step-number {
+      width: 3rem; height: 3rem;
+      border-radius: 50%;
+      background: var(--card);
+      border: 1px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--gold);
+      position: relative;
+      z-index: 1;
+    }
+
+    .onboarding-step h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--cream);
+      margin-bottom: 0.6rem;
+    }
+
+    .onboarding-step p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+    .step-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 0.8rem;
+      opacity: 0.7;
+    }
+
+    /* ── ROADMAP ── */
+    .roadmap {
+      padding: 8rem 4rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .roadmap h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--cream);
+      margin-bottom: 4rem;
+      max-width: 500px;
+      line-height: 1.2;
+    }
+
+    .phases {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      position: relative;
+    }
+
+    .phases::before {
+      content: '';
+      position: absolute;
+      top: 2rem;
+      left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .phase { padding: 2rem; text-align: center; position: relative; }
+
+    .phase-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--gold);
+      margin: 0 auto 1.5rem;
+      position: relative; z-index: 1;
+    }
+
+    .phase-dot::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+
+    .phase-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .phase h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--cream); margin-bottom: 0.8rem; }
+    .phase p { font-size: 0.82rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── CHALLENGE CTA ── */
+    .challenge {
+      padding: 8rem 4rem;
+      border-top: 1px solid var(--border);
+      background: var(--deep);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .challenge::before {
+      content: '';
+      position: absolute;
+      bottom: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.06) 0%, transparent 70%);
+    }
+
+    .challenge-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 2rem;
+    }
+
+    .challenge h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 900;
+      color: var(--cream);
+      line-height: 1.05;
+      max-width: 700px;
+      margin: 0 auto 1.5rem;
+    }
+
+    .challenge h2 em { font-style: italic; color: var(--gold); }
+
+    .challenge-sub {
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 440px;
+      margin: 0 auto 3rem;
+      line-height: 1.7;
+    }
+
+    /* ── APPLICATION FORM ── */
+    .application {
+      padding: 8rem 4rem;
+      border-top: 1px solid var(--border);
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .application h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      color: var(--cream);
+      margin-bottom: 0.5rem;
+    }
+
+    .application > p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 3rem;
+      line-height: 1.7;
+    }
+
+    .form-group { margin-bottom: 1.5rem; }
+
+    .form-label {
+      display: block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.85rem 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--gold); }
+    .form-textarea { min-height: 120px; resize: vertical; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .commitment-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--gold);
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .commitment-box h4 {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .commitment-items { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .commitment-items li {
+      font-size: 0.85rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .commitment-items li::before { content: '→'; color: var(--gold); font-size: 0.8rem; flex-shrink: 0; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      margin: 1.5rem 0;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px; height: 16px;
+      margin-top: 2px;
+      accent-color: var(--gold);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .checkbox-row label { font-size: 0.82rem; color: var(--muted); line-height: 1.6; cursor: pointer; }
+
+    .submit-btn {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--gold);
+      border: none;
+      padding: 1.2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+
+    .submit-btn:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+    .success-state { display: none; text-align: center; padding: 4rem 2rem; }
+    .success-state.visible { display: block; }
+
+    .success-icon { font-size: 3rem; margin-bottom: 1.5rem; }
+
+    .success-state h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--cream);
+      margin-bottom: 1rem;
+    }
+
+    .success-state p { color: var(--muted); font-size: 0.9rem; line-height: 1.7; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 3rem 4rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-logo {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    footer p { font-size: 0.75rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-anchors { display: none; }
+      .hero { padding: 8rem 1.5rem 4rem; }
+      .hero-stat-row { gap: 2rem; }
+      .founder { grid-template-columns: 1fr; gap: 2.5rem; padding: 5rem 1.5rem; }
+      .mirror { grid-template-columns: 1fr; gap: 3rem; padding: 5rem 1.5rem; }
+      .voices { padding: 5rem 1.5rem; }
+      .voices-header { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+      .voices-grid { grid-template-columns: 1fr; }
+      .features { padding: 5rem 1.5rem; }
+      .features-header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+      .features-header p { text-align: left; }
+      .features-grid { grid-template-columns: 1fr; }
+      .onboarding { padding: 5rem 1.5rem; }
+      .onboarding-steps { grid-template-columns: 1fr 1fr; gap: 2rem; }
+      .onboarding-steps::before { display: none; }
+      .roadmap { padding: 5rem 1.5rem; }
+      .phases { grid-template-columns: 1fr; }
+      .phases::before { display: none; }
+      .challenge { padding: 6rem 1.5rem; }
+      .application { padding: 5rem 1.5rem; }
+      .form-row { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; padding: 2rem 1.5rem; }
+    }
+
+    @media (max-width: 480px) {
+      .onboarding-steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCROLL PROGRESS -->
+  <div class="scroll-progress" id="scrollBar"></div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">The Academic Engine</div>
+    <div class="nav-anchors">
+      <a href="#about" class="nav-anchor">About</a>
+      <a href="#voices" class="nav-anchor">Voices</a>
+      <a href="#how" class="nav-anchor">How it works</a>
+      <a href="#apply" class="nav-anchor">Apply</a>
+    </div>
+    <a href="#apply" class="nav-cta">Apply Now</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="about">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-glow"></div>
+
+    <div class="cohort-badge">Founding Cohort · Africa · 2026</div>
+
+    <h1>You didn't come<br/>this far to <em>stall.</em></h1>
+
+    <p class="hero-sub">
+      The Academic Engine is a structured research accelerator for ambitious postgraduate scholars across Africa. Built to eliminate isolation, sharpen milestones, and turn your PhD into a predictable, connected, and competitive journey.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#apply" class="btn-primary">Apply for Your Spot →</a>
+      <span class="hero-note">20 founding spots · Phase-based · Free pilot</span>
+    </div>
+
+    <div class="hero-stat-row">
+      <div class="hero-stat">
+        <h3>20</h3>
+        <p>Founding scholars</p>
+      </div>
+      <div class="hero-stat">
+        <h3>3</h3>
+        <p>Research phases</p>
+      </div>
+      <div class="hero-stat">
+        <h3>∞</h3>
+        <p>Iterations ahead</p>
+      </div>
+      <div class="hero-stat">
+        <h3>0</h3>
+        <p>Cost to you</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDER NOTE -->
+  <section class="founder">
+    <div class="founder-left">
+      <div class="founder-avatar">A</div>
+      <div>
+        <div class="founder-name">The Founder</div>
+        <div class="founder-title">PhD Researcher<br/>University of Ghana<br/>School of Engineering</div>
+      </div>
+    </div>
+    <div class="founder-right">
+      <blockquote>
+        I didn't build this because I read about the problem. I built it because I lived it — and I tried to fix it once before and watched it fall apart by Week 2.
+      </blockquote>
+      <p>
+        I'm a PhD student at the University of Ghana. Last year I tried to build an accountability group for fellow postgraduate researchers. It died fast — not because people didn't care, but because there was no structure holding it alive. I learned from that. I came back with a system. The Academic Engine is what I wish had existed when I started. We're building it together — with the first 20 scholars who are serious enough to help shape it.
+      </p>
+    </div>
+  </section>
+
+  <!-- MIRROR -->
+  <section class="mirror" id="voices">
+    <div class="mirror-left">
+      <div class="section-label">The Reality</div>
+      <h2>Sound <em>familiar?</em></h2>
+    </div>
+    <div class="mirror-right">
+      <ul class="pain-list">
+        <li class="pain-item">
+          <span class="pain-icon">🌑</span>
+          <div>
+            <strong>You're working completely alone</strong>
+            No one around you understands the exact pressure of a chapter deadline, a failed experiment, or a silent supervisor.
+          </div>
+        </li>
+        <li class="pain-item">
+          <span class="pain-icon">📂</span>
+          <div>
+            <strong>Your tools are fragmented everywhere</strong>
+            Notes in one app, references in another, tasks in your head. Nothing talks to where you actually are in your research.
+          </div>
+        </li>
+        <li class="pain-item">
+          <span class="pain-icon">📅</span>
+          <div>
+            <strong>Weeks disappear without real progress</strong>
+            You're busy — but the thesis isn't moving. Busyness and momentum are not the same thing.
+          </div>
+        </li>
+        <li class="pain-item">
+          <span class="pain-icon">🔇</span>
+          <div>
+            <strong>Every group dies by Week 2</strong>
+            Every accountability group you've tried fades fast. Not because of bad intentions — because there was no structure holding it alive.
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SOCIAL PROOF -->
+  <section class="voices">
+    <div class="voices-header">
+      <div>
+        <div class="section-label">Voices from the field</div>
+        <h2>What your peers are saying</h2>
+      </div>
+      <div class="voices-note">Collected from PhD researchers at the University of Ghana, 2025</div>
+    </div>
+
+    <div class="voices-grid">
+      <div class="voice-card">
+        <blockquote>
+          I didn't realise how isolated I was until someone named it. I thought struggling alone was just part of the process.
+        </blockquote>
+        <div class="voice-meta">MPhil Researcher · Engineering</div>
+      </div>
+      <div class="voice-card">
+        <blockquote>
+          My supervisor goes quiet for weeks. I have no one to check in with. I just keep working and hoping I'm on the right track.
+        </blockquote>
+        <div class="voice-meta">PhD Year 2 · Physical Sciences</div>
+      </div>
+      <div class="voice-card">
+        <blockquote>
+          The group we tried last year was good for a week. Then everyone got busy and nobody wanted to be the one to push others.
+        </blockquote>
+        <div class="voice-meta">PhD Year 1 · Civil Engineering</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features" id="how">
+    <div class="features-header">
+      <div>
+        <div class="section-label">The System</div>
+        <h2>Everything engineered<br/>for research momentum</h2>
+      </div>
+      <p>Five integrated mechanisms designed to keep you moving, connected, and accountable — phase after phase.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-number">01</div>
+        <h3>Stage-Gated Milestone Roadmap</h3>
+        <p>Your research broken into explicit phases with clear weekly deliverables. No more vague progress — just structured, trackable momentum from Foundation to Launch.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">02</div>
+        <h3>Accountability Duos</h3>
+        <p>Paired with a research peer based on goal alignment. When your partner hits a milestone, you're notified. When you go quiet, the system — not your partner — checks in.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">03</div>
+        <h3>Deep-Work Co-Working Rooms</h3>
+        <p>Hybrid virtual and physical writing sessions. Structured sprint blocks. Show up, lock in, and write alongside your cohort — in silence, together.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">04</div>
+        <h3>Interdisciplinary Peer Grid</h3>
+        <p>Automatically matched with peers across disciplines who complement your research gaps. The collaboration you didn't know to look for — across departments, institutions, and borders.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">05</div>
+        <h3>Phase-Matched Resource Feed</h3>
+        <p>Curated guides, writing resources, and mental health check-ins delivered based on exactly where you are in your research — not a generic feed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">06</div>
+        <h3>Cohort Progress Board</h3>
+        <p>See what every member is working on. Public accountability built in. Silence becomes visible — momentum becomes contagious.</p>
+      </div>
+      <div class="feature-card" style="border-top: 2px solid var(--gold);">
+        <div class="feature-number">07 · New</div>
+        <h3>Advisor CRM &amp; Meeting Matrix</h3>
+        <p>Before every supervisor meeting, the platform auto-generates a tight agenda from your logged progress. Conflicting feedback from multiple advisors is flagged and tracked — so nothing falls through the cracks.</p>
+      </div>
+      <div class="feature-card" style="border-top: 2px solid var(--gold);">
+        <div class="feature-number">08 · New</div>
+        <h3>CV Competitiveness Index</h3>
+        <p>Your dashboard tracks more than thesis completion. Publications, conference abstracts, grants, collaborations, fellowships — all scored live into a single index showing how competitive your academic profile is becoming, phase by phase.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHAT HAPPENS AFTER YOU APPLY -->
+  <section class="onboarding">
+    <div class="section-label">What happens next</div>
+    <h2>From application<br/>to first session.</h2>
+    <p class="onboarding-sub">Here's exactly what to expect after you hit submit — no vague promises, no waiting in the dark.</p>
+
+    <div class="onboarding-steps">
+      <div class="onboarding-step">
+        <div class="step-number">01</div>
+        <h4>You Apply</h4>
+        <p>Fill in the 3-minute form. Tell us your biggest blocker and commit to the cohort structure.</p>
+        <div class="step-time">Today</div>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-number">02</div>
+        <h4>We Review</h4>
+        <p>Every application is read personally. We confirm your place and send your onboarding details.</p>
+        <div class="step-time">Within 48 hours</div>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-number">03</div>
+        <h4>You Onboard</h4>
+        <p>Set up your research profile, get paired with your accountability duo, and access the platform.</p>
+        <div class="step-time">Day 1</div>
+      </div>
+      <div class="onboarding-step">
+        <div class="step-number">04</div>
+        <h4>First Session</h4>
+        <p>Join your first hybrid co-working session. Meet your cohort. Lock in your Phase 1 milestone.</p>
+        <div class="step-time">Week 1</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROADMAP -->
+  <section class="roadmap">
+    <div class="section-label">The Journey</div>
+    <h2>Three phases.<br/>Your pace. One breakthrough.</h2>
+
+    <div class="phases">
+      <div class="phase">
+        <div class="phase-dot"></div>
+        <div class="phase-tag">Phase 01</div>
+        <h3>Foundation</h3>
+        <p>Lock in your research parameters. Build your systematic review structure. Establish your writing rhythm with structured sprint sessions.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-dot"></div>
+        <div class="phase-tag">Phase 02</div>
+        <h3>Cross-Pollination</h3>
+        <p>Activate your duo partnership. Engage interdisciplinary peers. Target your first conference abstract or publication opportunity.</p>
+      </div>
+      <div class="phase">
+        <div class="phase-dot"></div>
+        <div class="phase-tag">Phase 03</div>
+        <h3>Launch</h3>
+        <p>Compile your modular chapters. Submit your first draft milestone. Present your progress to the cohort and feed your insights into the next version.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHALLENGE CTA -->
+  <section class="challenge">
+    <div class="challenge-eyebrow">The Founding Cohort</div>
+    <h2>We're accepting<br/><em>20 researchers.</em><br/>Are you one?</h2>
+    <p class="challenge-sub">
+      This is a selective pilot for ambitious postgraduate scholars across Africa. We're looking for researchers who are serious about finishing — and willing to hold each other to it. Starting in Ghana. Built for the world.
+    </p>
+    <a href="#apply" class="btn-primary">Claim Your Spot →</a>
+  </section>
+
+  <!-- APPLICATION FORM -->
+  <section class="application" id="apply">
+    <div class="section-label">Application</div>
+    <h2>Join the Founding Cohort</h2>
+    <p>Takes 3 minutes. We'll review every application personally and confirm your place within 48 hours.</p>
+
+    <div id="app-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fname">First Name</label>
+          <input class="form-input" type="text" id="fname" placeholder="Your first name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lname">Last Name</label>
+          <input class="form-input" type="text" id="lname" placeholder="Your last name" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">University Email</label>
+        <input class="form-input" type="email" id="email" placeholder="yourname@university.edu" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="university">University</label>
+          <input class="form-input" type="text" id="university" placeholder="e.g. University of Ghana" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="dept">Department / Faculty</label>
+          <input class="form-input" type="text" id="dept" placeholder="e.g. Civil Engineering" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="level">Programme Level</label>
+          <select class="form-select" id="level">
+            <option value="" disabled selected>Select level</option>
+            <option>MPhil</option>
+            <option>PhD — Year 1</option>
+            <option>PhD — Year 2</option>
+            <option>PhD — Year 3+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="country">Country</label>
+          <input class="form-input" type="text" id="country" placeholder="e.g. Ghana" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="phase">Current Research Phase</label>
+        <select class="form-select" id="phase">
+          <option value="" disabled selected>Where are you right now?</option>
+          <option>Proposal / Concept Development</option>
+          <option>Literature Review</option>
+          <option>Data Collection / Fieldwork</option>
+          <option>Data Analysis</option>
+          <option>Writing Up / Thesis Compilation</option>
+          <option>Revision / Final Submission</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="blocker">What is your biggest research blocker right now?</label>
+        <textarea class="form-textarea" id="blocker" placeholder="Be honest. This is exactly the kind of thing we're built to solve..."></textarea>
+      </div>
+
+      <div class="commitment-box">
+        <h4>The Founding Commitment</h4>
+        <ul class="commitment-items">
+          <li>One structured co-working session per week (hybrid)</li>
+          <li>One weekly milestone update on the platform</li>
+          <li>One accountability check-in with your duo partner</li>
+          <li>Honest feedback to help shape the platform as we build it</li>
+        </ul>
+      </div>
+
+      <div class="checkbox-row">
+        <input type="checkbox" id="commit" />
+        <label for="commit">I commit to the founding cohort structure and understand that my engagement directly shapes the platform that will help postgraduate researchers across Africa and beyond.</label>
+      </div>
+
+      <button class="submit-btn" onclick="handleSubmit()">Submit My Application →</button>
+    </div>
+
+    <div class="success-state" id="success">
+      <div class="success-icon">✦</div>
+      <h3>Application received.</h3>
+      <p>We'll review your application and confirm your place within 48 hours.<br/>Welcome to the beginning of something significant.</p>
+      <div style="margin-top:2rem;display:flex;flex-direction:column;align-items:center;gap:1rem;">
+        <a href="academic-engine-onboarding.html" style="font-family:'DM Mono',monospace;font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:#080808;background:#c9a84c;border:none;padding:1rem 2.5rem;cursor:pointer;text-decoration:none;display:inline-block;transition:all 0.2s;">
+          Proceed to Onboarding →
+        </a>
+        <span style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;color:#666;">You will receive a confirmation email within 48 hours</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">The Academic Engine</div>
+    <p>Starting in Ghana · Built for Africa · Scaling to the World</p>
+  </footer>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo →</span>
+    <a href="index.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s;" onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'" onmouseout="this.style.borderColor='#222';this.style.color='#777'">Home</a>
+    <a href="academic-engine-landing.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#c9a84c;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid rgba(201,168,76,0.4);background:rgba(201,168,76,0.1);">Landing</a>
+    <a href="academic-engine-onboarding.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s;" onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'" onmouseout="this.style.borderColor='#222';this.style.color='#777'">Onboarding</a>
+    <a href="academic-engine-dashboard.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s;" onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'" onmouseout="this.style.borderColor='#222';this.style.color='#777'">Dashboard</a>
+    <a href="academic-engine-milestones.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s;" onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'" onmouseout="this.style.borderColor='#222';this.style.color='#777'">Milestones</a>
+    <a href="academic-engine-sprint.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s;" onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'" onmouseout="this.style.borderColor='#222';this.style.color='#777'">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" style="font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s;" onmouseover="this.style.borderColor='#c9a84c';this.style.color='#c9a84c'" onmouseout="this.style.borderColor='#222';this.style.color='#777'">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem;margin-left:0.2rem;" title="Hide demo bar">✕</button>
+  </div>
+
+  <script>
+    // Scroll progress bar
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      document.getElementById('scrollBar').style.width = pct + '%';
+    });
+
+    // Form submission
+    function handleSubmit() {
+      const fname = document.getElementById('fname').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const university = document.getElementById('university').value.trim();
+      const dept = document.getElementById('dept').value.trim();
+      const level = document.getElementById('level').value;
+      const phase = document.getElementById('phase').value;
+      const blocker = document.getElementById('blocker').value.trim();
+      const commit = document.getElementById('commit').checked;
+
+      if (!fname || !email || !university || !dept || !level || !phase || !blocker) {
+        alert('Please fill in all fields before submitting.');
+        return;
+      }
+      if (!commit) {
+        alert('Please confirm your commitment to the cohort before applying.');
+        return;
+      }
+
+      document.getElementById('app-form').style.display = 'none';
+      document.getElementById('success').classList.add('visible');
+      window.scrollTo({ top: document.getElementById('apply').offsetTop - 100, behavior: 'smooth' });
+    }
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.style.opacity = '1';
+          el.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.feature-card, .phase, .pain-item, .voice-card, .onboarding-step').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

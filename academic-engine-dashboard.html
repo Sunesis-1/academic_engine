@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Academic Engine — Scholar Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #080808; --deep: #0e0e0e; --card: #141414; --card2: #181818;
+      --border: #222; --border2: #2a2a2a;
+      --gold: #c9a84c; --gold-light: #e8c87a; --gold-dim: rgba(201,168,76,0.15);
+      --cream: #f5f0e8; --muted: #555; --muted2: #777; --text: #d0cbc3;
+      --green: #4caf7d; --red: #e05c5c; --blue: #5c8fe0; --purple: #9c6ee0;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overflow-x: hidden; min-height: 100vh; }
+    body::after { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E"); pointer-events: none; z-index: 999; opacity: 0.5; }
+
+    /* LAYOUT */
+    .app { display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar { width: 240px; flex-shrink: 0; background: var(--deep); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; overflow-y: auto; }
+    .sidebar-logo { padding: 1.8rem 1.5rem 1.2rem; border-bottom: 1px solid var(--border); }
+    .sidebar-logo span { font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); }
+    .sidebar-logo p { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+    .sidebar-scholar { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.8rem; }
+    .scholar-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8a6e2f); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--black); flex-shrink: 0; }
+    .scholar-name { font-size: 0.82rem; font-weight: 500; color: var(--cream); }
+    .scholar-dept { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--gold); text-transform: uppercase; margin-top: 0.15rem; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-section-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); padding: 0.8rem 1.5rem 0.4rem; }
+    .nav-item { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 1.5rem; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; font-size: 0.82rem; color: var(--muted2); text-decoration: none; }
+    .nav-item:hover { color: var(--cream); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: var(--gold-dim); }
+    .nav-icon { font-size: 0.9rem; width: 1.2rem; text-align: center; }
+    .nav-badge { margin-left: auto; background: var(--gold); color: var(--black); font-family: 'DM Mono', monospace; font-size: 0.55rem; padding: 0.1rem 0.4rem; border-radius: 2px; }
+    .sidebar-phase { padding: 1.2rem 1.5rem; border-top: 1px solid var(--border); margin-top: auto; }
+    .phase-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; }
+    .phase-name { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--gold); margin-bottom: 0.6rem; }
+    .phase-bar-track { height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; }
+    .phase-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; width: 38%; }
+    .phase-pct { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.4rem; }
+
+    /* MAIN */
+    .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+    /* TOPBAR */
+    .topbar { position: sticky; top: 0; z-index: 40; background: rgba(8,8,8,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 1rem 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .topbar-greeting h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 700; color: var(--cream); }
+    .topbar-greeting p { font-size: 0.75rem; color: var(--muted2); margin-top: 0.1rem; }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .streak-badge { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; color: var(--gold); background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.25); padding: 0.4rem 0.8rem; }
+    .topbar-notif { width: 34px; height: 34px; border: 1px solid var(--border2); background: var(--card); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.9rem; position: relative; transition: border-color 0.2s; }
+    .topbar-notif:hover { border-color: var(--gold); }
+    .notif-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
+
+    /* CONTENT */
+    .content { padding: 2rem 2.5rem 4rem; display: flex; flex-direction: column; gap: 2rem; }
+
+    /* ALERT */
+    .alert-banner { background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.25); border-left: 3px solid var(--gold); padding: 0.9rem 1.2rem; display: flex; align-items: center; gap: 1rem; animation: fadeUp 0.5s ease both; }
+    .alert-banner p { font-size: 0.82rem; color: var(--cream); flex: 1; }
+    .alert-banner strong { color: var(--gold); }
+    .alert-dismiss { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); cursor: pointer; padding: 0.3rem 0.7rem; border: 1px solid rgba(201,168,76,0.3); transition: background 0.2s; white-space: nowrap; }
+    .alert-dismiss:hover { background: var(--gold-dim); }
+
+    /* CARD BASE */
+    .card { background: var(--card); border: 1px solid var(--border); }
+    .card-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-title { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); }
+    .card-action { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: color 0.2s; }
+    .card-action:hover { color: var(--gold); }
+    .card-body { padding: 1.5rem; }
+
+    /* GRID LAYOUTS */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; animation: fadeUp 0.5s ease 0.1s both; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; animation: fadeUp 0.5s ease 0.15s both; }
+    .four-col { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); animation: fadeUp 0.5s ease 0.05s both; }
+
+    /* STAT CARDS */
+    .stat-card { background: var(--card); padding: 1.4rem 1.6rem; transition: background 0.2s; }
+    .stat-card:hover { background: var(--card2); }
+    .stat-label { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+    .stat-visual { display: flex; align-items: center; gap: 1rem; }
+    .stat-change { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--green); margin-top: 0.4rem; display: flex; align-items: center; gap: 0.2rem; }
+    .stat-sub { font-size: 0.7rem; color: var(--muted2); margin-top: 0.3rem; }
+
+    /* RING CHART */
+    .ring-wrap { position: relative; flex-shrink: 0; }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    .ring-track { fill: none; stroke: var(--border2); }
+    .ring-fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1.2s ease; }
+    .ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ring-value { font-family: 'Playfair Display', serif; font-weight: 700; line-height: 1; }
+    .ring-unit { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; color: var(--muted); margin-top: 0.1rem; }
+
+    /* SPIDER / RADAR CHART */
+    .spider-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.2rem; }
+    .spider-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; }
+    .spider-legend-item { display: flex; align-items: center; gap: 0.4rem; font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.08em; color: var(--muted2); }
+    .spider-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* PHASE JOURNEY MAP */
+    .phase-journey { display: flex; align-items: center; gap: 0; padding: 1rem 0; }
+    .phase-node { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; flex: 1; }
+    .phase-circle { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--muted); transition: all 0.3s; position: relative; z-index: 1; background: var(--card); }
+    .phase-circle.done { border-color: var(--green); color: var(--green); background: rgba(76,175,125,0.1); }
+    .phase-circle.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); box-shadow: 0 0 20px rgba(201,168,76,0.2); }
+    .phase-circle.active::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 1px solid rgba(201,168,76,0.3); animation: pulse-ring 2s infinite; }
+    @keyframes pulse-ring { 0%,100% { opacity:1; transform: scale(1); } 50% { opacity:0.3; transform: scale(1.1); } }
+    .phase-node-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-align: center; }
+    .phase-node-label.active-label { color: var(--gold); }
+    .phase-connector { flex: 1; height: 2px; background: var(--border2); margin-top: -1.8rem; position: relative; z-index: 0; }
+    .phase-connector.done { background: var(--green); }
+
+    /* WEEKLY ACCOUNTABILITY MAP */
+    .wam-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+    .wam-week-badge { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2); padding: 0.3rem 0.8rem; }
+    .wam-network { position: relative; width: 100%; height: 220px; margin-bottom: 1.2rem; }
+    .wam-network svg { width: 100%; height: 100%; }
+    .wam-current-partner { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.2rem; background: var(--deep); border: 1px solid var(--border); border-left: 3px solid var(--gold); margin-bottom: 1rem; }
+    .wam-partner-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg,#5c8fe0,#2d5aa8); display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .wam-partner-info { flex: 1; }
+    .wam-partner-name { font-size: 0.85rem; font-weight: 500; color: var(--cream); }
+    .wam-partner-dept { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--blue); text-transform: uppercase; margin-top: 0.15rem; }
+    .wam-partner-why { font-size: 0.72rem; color: var(--muted2); margin-top: 0.3rem; font-style: italic; }
+    .wam-partner-status { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: var(--green); }
+    .wam-partner-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .wam-history { display: flex; flex-direction: column; gap: 0.5rem; }
+    .wam-history-label { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.3rem; }
+    .wam-history-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .wam-past-chip { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.7rem; background: var(--deep); border: 1px solid var(--border2); font-size: 0.72rem; color: var(--text); }
+    .wam-chip-avatar { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; color: white; font-family: 'Playfair Display', serif; }
+    .wam-nudge-btn { width: 100%; padding: 0.7rem; background: transparent; border: 1px solid var(--border2); color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; }
+    .wam-nudge-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+
+    /* HEAT MAP COHORT BOARD */
+    .heatmap-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+    .heatmap-member { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; padding: 0.7rem 0.3rem; background: var(--deep); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; text-align: center; position: relative; }
+    .heatmap-member:hover { border-color: var(--gold); }
+    .heatmap-member.you { border-color: rgba(201,168,76,0.4); background: var(--gold-dim); }
+    .heatmap-member.inactive { opacity: 0.3; }
+    .hm-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 0.75rem; font-weight: 700; color: white; }
+    .hm-name { font-size: 0.62rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .hm-dots { display: flex; gap: 2px; }
+    .hm-dot { width: 5px; height: 5px; border-radius: 1px; background: var(--border2); }
+    .hm-dot.d1 { background: rgba(201,168,76,0.3); }
+    .hm-dot.d2 { background: rgba(201,168,76,0.5); }
+    .hm-dot.d3 { background: rgba(201,168,76,0.7); }
+    .hm-dot.d4 { background: var(--gold); }
+    .hm-dot.d5 { background: var(--gold-light); }
+
+    /* KANBAN PUBLICATIONS */
+    .kanban-board { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); }
+    .kanban-col { background: var(--deep); padding: 1rem; }
+    .kanban-col-header { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; }
+    .kanban-col-count { background: var(--border2); color: var(--muted2); padding: 0.1rem 0.4rem; font-size: 0.55rem; }
+    .kanban-card { background: var(--card); border: 1px solid var(--border2); padding: 0.8rem; margin-bottom: 0.6rem; cursor: pointer; transition: border-color 0.15s; }
+    .kanban-card:hover { border-color: var(--gold); }
+    .kanban-card-title { font-size: 0.75rem; color: var(--cream); line-height: 1.4; }
+    .kanban-card-meta { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); margin-top: 0.4rem; }
+    .kanban-card-bar { height: 2px; background: var(--border2); margin-top: 0.6rem; border-radius: 1px; overflow: hidden; }
+    .kanban-card-fill { height: 100%; background: var(--gold); }
+    .kanban-add { width: 100%; padding: 0.5rem; border: 1px dashed var(--border2); background: transparent; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s; }
+    .kanban-add:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* MICRO DRAFTING */
+    .draft-phase-tag { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.2rem; padding: 0.4rem 0.8rem; background: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2); display: inline-block; }
+    .draft-sections { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
+    .draft-section { display: flex; align-items: center; gap: 0.8rem; padding: 0.75rem 1rem; background: var(--deep); border: 1px solid var(--border); transition: border-color 0.15s; flex-wrap: wrap; }
+    .draft-section.done { opacity: 0.6; }
+    .draft-section.active { border-left: 2px solid var(--gold); }
+    .draft-check { width: 18px; height: 18px; border: 1.5px solid var(--border2); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: var(--green); flex-shrink: 0; }
+    .draft-section.done .draft-check { background: var(--green); border-color: var(--green); color: white; }
+    .draft-active-dot { width: 18px; height: 18px; border: 1.5px solid var(--gold); border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .draft-active-dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: pulse-dot 1.5s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+    .draft-section-info { flex: 1; min-width: 0; }
+    .draft-section-name { font-size: 0.82rem; color: var(--cream); }
+    .draft-section-words { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.15rem; }
+    .draft-word-bar { width: 100%; height: 3px; background: var(--border2); border-radius: 2px; overflow: hidden; margin-top: 0.5rem; }
+    .draft-word-fill { height: 100%; background: var(--gold); border-radius: 2px; }
+    .draft-prompt { padding: 1rem 1.1rem; background: var(--deep); border: 1px solid var(--border); border-left: 3px solid var(--gold); }
+    .draft-prompt-label { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem; }
+    .draft-prompt-text { font-size: 0.82rem; color: var(--text); line-height: 1.7; font-style: italic; }
+
+    /* OPPORTUNITY RADAR */
+    .opp-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .opp-item { display: flex; align-items: flex-start; gap: 0.9rem; padding: 1rem 1.1rem; background: var(--deep); border: 1px solid var(--border); transition: border-color 0.15s; }
+    .opp-item:hover { border-color: var(--border2); }
+    .opp-item.urgent { border-left: 2px solid var(--gold); }
+    .opp-type-badge { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 0.2rem 0.5rem; border: 1px solid; flex-shrink: 0; margin-top: 0.15rem; white-space: nowrap; }
+    .opp-type-badge.conference { border-color: rgba(201,168,76,0.4); color: var(--gold); }
+    .opp-type-badge.fellowship { border-color: rgba(92,143,224,0.4); color: var(--blue); }
+    .opp-type-badge.grant { border-color: rgba(76,175,125,0.4); color: var(--green); }
+    .opp-content { flex: 1; min-width: 0; }
+    .opp-title { font-size: 0.82rem; color: var(--cream); line-height: 1.4; }
+    .opp-meta { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.3rem; flex-wrap: wrap; }
+    .opp-deadline { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--muted2); }
+    .opp-deadline.urgent { color: var(--red); }
+    .opp-match { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--green); }
+    .opp-desc { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; line-height: 1.5; }
+    .opp-btn { padding: 0.4rem 0.8rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; white-space: nowrap; align-self: flex-start; }
+    .opp-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* GRANTS */
+    .grant-stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); margin-bottom: 1.2rem; }
+    .grant-stat { background: var(--deep); padding: 0.8rem; text-align: center; }
+    .grant-stat-val { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .grant-stat-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
+    .grant-alert { display: flex; align-items: flex-start; gap: 0.7rem; padding: 0.9rem 1rem; margin-bottom: 1.2rem; background: rgba(224,92,92,0.06); border: 1px solid rgba(224,92,92,0.2); border-left: 3px solid var(--red); }
+    .grant-alert span { color: var(--red); font-size: 0.9rem; flex-shrink: 0; }
+    .grant-alert p { font-size: 0.78rem; color: var(--muted2); line-height: 1.6; }
+    .grant-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .grant-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; background: var(--deep); border: 1px solid var(--border); transition: border-color 0.15s; }
+    .grant-item:hover { border-color: var(--border2); }
+    .grant-name { font-size: 0.82rem; color: var(--cream); }
+    .grant-amount { font-family: 'DM Mono', monospace; font-size: 0.6rem; color: var(--green); margin-top: 0.2rem; }
+    .grant-deadline { font-family: 'DM Mono', monospace; font-size: 0.58rem; color: var(--muted); margin-top: 0.15rem; }
+    .grant-deadline.urgent { color: var(--red); }
+
+    /* WRITING SPRINT */
+    .sprint-timer { text-align: center; padding: 1.5rem; background: var(--deep); border: 1px solid var(--border); position: relative; overflow: hidden; }
+    .sprint-timer::before { content: ''; position: absolute; bottom: 0; left: 0; height: 2px; background: var(--gold); width: 62%; transition: width 0.3s; }
+    .sprint-time { font-family: 'DM Mono', monospace; font-size: 2.8rem; color: var(--cream); letter-spacing: 0.05em; }
+    .sprint-label { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-top: 0.3rem; }
+    .sprint-sessions { display: flex; gap: 0.4rem; margin: 0.8rem 0; }
+    .session-dot { flex: 1; height: 4px; background: var(--border2); border-radius: 2px; }
+    .session-dot.done { background: var(--gold); }
+    .session-dot.active { background: var(--gold); animation: pulse-bar 1.5s infinite; }
+    @keyframes pulse-bar { 0%,100%{opacity:1;}50%{opacity:0.4;} }
+    .sprint-controls { display: flex; gap: 0.5rem; }
+    .sprint-btn { flex: 1; padding: 0.7rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
+    .sprint-btn.primary { background: var(--gold); border-color: var(--gold); color: var(--black); font-weight: 500; }
+    .sprint-btn:hover:not(.primary) { border-color: var(--gold); color: var(--gold); }
+    .sprint-btn.primary:hover { background: var(--gold-light); }
+
+    /* ADVISOR CRM */
+    .advisor-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.1rem; background: var(--deep); border: 1px solid var(--border); transition: border-color 0.2s; margin-bottom: 0.7rem; }
+    .advisor-item:hover { border-color: var(--border2); }
+    .advisor-avatar-sm { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#4caf7d,#267a52); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: white; flex-shrink: 0; font-family: 'Playfair Display', serif; }
+    .advisor-item-name { font-size: 0.82rem; color: var(--cream); font-weight: 500; }
+    .advisor-item-role { font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; color: var(--green); text-transform: uppercase; margin-top: 0.1rem; }
+    .advisor-item-last { font-size: 0.72rem; color: var(--muted); margin-top: 0.3rem; }
+    .advisor-conflict { display: flex; align-items: center; gap: 0.3rem; font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); margin-top: 0.4rem; }
+    .meeting-btn { padding: 0.4rem 0.8rem; border: 1px solid var(--border2); background: transparent; color: var(--muted2); font-family: 'DM Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s; white-space: nowrap; align-self: flex-start; }
+    .meeting-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* RESOURCE FEED */
+    .feed-list { display: flex; flex-direction: column; gap: 0.7rem; }
+    .feed-item { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.9rem 1rem; background: var(--deep); border: 1px solid var(--border); cursor: pointer; transition: border-color 0.15s; }
+    .feed-item:hover { border-color: var(--border2); }
+    .feed-thumb { width: 40px; height: 40px; flex-shrink: 0; background: var(--card2); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .feed-title { font-size: 0.8rem; color: var(--cream); line-height: 1.4; }
+    .feed-meta { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.3rem; }
+    .feed-type { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.1rem 0.4rem; border: 1px solid var(--border2); color: var(--muted2); }
+    .feed-type.video { border-color: rgba(224,92,92,0.3); color: var(--red); }
+    .feed-type.read { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+    .feed-type.mental { border-color: rgba(76,175,125,0.3); color: var(--green); }
+    .feed-duration { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); }
+
+    /* MILESTONE LIST */
+    .milestone-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .milestone-item { display: flex; align-items: flex-start; gap: 0.9rem; padding: 0.9rem 1rem; background: var(--deep); border: 1px solid var(--border); border-left: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+    .milestone-item:hover { border-left-color: var(--gold); }
+    .milestone-item.done { border-left-color: var(--green); opacity: 0.7; }
+    .milestone-item.done .milestone-title { text-decoration: line-through; color: var(--muted); }
+    .milestone-check { width: 18px; height: 18px; border: 1.5px solid var(--border2); border-radius: 3px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; color: var(--green); }
+    .milestone-item.done .milestone-check { background: var(--green); border-color: var(--green); color: white; }
+    .milestone-title { font-size: 0.82rem; color: var(--cream); line-height: 1.4; }
+    .milestone-meta { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.3rem; flex-wrap: wrap; }
+    .milestone-tag { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.15rem 0.5rem; border: 1px solid var(--border2); color: var(--muted2); }
+    .milestone-tag.writing { border-color: rgba(201,168,76,0.3); color: var(--gold); }
+    .milestone-tag.research { border-color: rgba(92,143,224,0.3); color: var(--blue); }
+    .milestone-tag.admin { border-color: rgba(76,175,125,0.3); color: var(--green); }
+    .milestone-due { font-family: 'DM Mono', monospace; font-size: 0.55rem; color: var(--muted); }
+    .milestone-due.urgent { color: var(--red); }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+    .full-width { animation: fadeUp 0.5s ease 0.2s both; }
+
+    /* RESPONSIVE */
+    @media(max-width:1024px){.sidebar{width:200px;}.main{margin-left:200px;}.four-col{grid-template-columns:repeat(2,1fr);}.three-col{grid-template-columns:1fr 1fr;}.kanban-board{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:768px){.sidebar{display:none;}.main{margin-left:0;}.two-col,.three-col{grid-template-columns:1fr;}.four-col{grid-template-columns:repeat(2,1fr);}.topbar{padding:1rem 1.2rem;}.content{padding:1.2rem 1.2rem 3rem;}.heatmap-grid{grid-template-columns:repeat(4,1fr);}.kanban-board{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span>The Academic Engine</span>
+      <p>Scholar Dashboard</p>
+    </div>
+    <div class="sidebar-scholar">
+      <div class="scholar-avatar">A</div>
+      <div>
+        <div class="scholar-name">Your Name</div>
+        <div class="scholar-dept">PhD · Engineering</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Workspace</div>
+      <a class="nav-item active" href="academic-engine-dashboard.html"><span class="nav-icon">⬡</span> Dashboard</a>
+      <a class="nav-item" href="academic-engine-milestones.html"><span class="nav-icon">◎</span> Milestones <span class="nav-badge">3</span></a>
+      <a class="nav-item" href="academic-engine-sprint.html"><span class="nav-icon">✦</span> Writing Sprints</a>
+      <a class="nav-item" href="academic-engine-cv-index.html"><span class="nav-icon">◈</span> CV Index</a>
+      <div class="nav-section-label">Community</div>
+      <a class="nav-item" href="#"><span class="nav-icon">⟡</span> Cohort Board</a>
+      <a class="nav-item" href="#"><span class="nav-icon">⇌</span> Weekly Map <span class="nav-badge">New</span></a>
+      <a class="nav-item" href="#"><span class="nav-icon">◉</span> Co-Working Rooms <span class="nav-badge">2</span></a>
+      <a class="nav-item" href="#"><span class="nav-icon">◷</span> Events</a>
+      <div class="nav-section-label">Research</div>
+      <a class="nav-item" href="#"><span class="nav-icon">⊞</span> Advisor CRM <span class="nav-badge">!</span></a>
+      <a class="nav-item" href="#"><span class="nav-icon">◫</span> Resource Feed</a>
+      <a class="nav-item" href="#"><span class="nav-icon">⊕</span> Peer Grid</a>
+      <a class="nav-item" href="#"><span class="nav-icon">◬</span> Opportunity Radar <span class="nav-badge">2</span></a>
+      <a class="nav-item" href="#"><span class="nav-icon">◰</span> Grants Tracker</a>
+    </nav>
+    <div class="sidebar-phase">
+      <div class="phase-label">Current Phase</div>
+      <div class="phase-name">Phase 01 · Foundation</div>
+      <div class="phase-bar-track"><div class="phase-bar-fill"></div></div>
+      <div class="phase-pct">38% complete</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-greeting">
+        <h2>Good morning, Scholar.</h2>
+        <p id="topbarDate">Saturday · May 23, 2026</p>
+      </div>
+      <div class="topbar-right">
+        <div class="streak-badge">🔥 Day 6 Streak</div>
+        <div class="topbar-notif">🔔<div class="notif-dot"></div></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ALERT -->
+      <div class="alert-banner" id="alertBanner">
+        <span style="font-size:1.1rem">⚡</span>
+        <p><strong>Momentum check:</strong> Day 10. Your weekly partner Kwame completed his Phase 1 outline. 14 of 20 scholars active today. New partner match drops Monday.</p>
+        <div class="alert-dismiss" onclick="this.parentElement.style.display='none'">Dismiss</div>
+      </div>
+
+      <!-- ROW 1: 4 Visual Stat Cards -->
+      <div class="four-col">
+        <!-- CV Index ring -->
+        <div class="stat-card">
+          <div class="stat-label">CV Index Score</div>
+          <div class="stat-visual">
+            <div class="ring-wrap">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle class="ring-track" cx="35" cy="35" r="28" stroke-width="5"/>
+                <circle class="ring-fill" cx="35" cy="35" r="28" stroke="#c9a84c" stroke-width="5"
+                  stroke-dasharray="175.9" stroke-dashoffset="116" />
+              </svg>
+              <div class="ring-label">
+                <span class="ring-value" style="font-size:1.2rem;color:var(--gold)">34</span>
+                <span class="ring-unit">/ 100</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.78rem;color:var(--cream);">Above average</div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem;">Phase avg: 28</div>
+              <div class="stat-change">↑ +6 this phase</div>
+            </div>
+          </div>
+        </div>
+        <!-- Thesis ring -->
+        <div class="stat-card">
+          <div class="stat-label">Thesis Progress</div>
+          <div class="stat-visual">
+            <div class="ring-wrap">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle class="ring-track" cx="35" cy="35" r="28" stroke-width="5"/>
+                <circle class="ring-fill" cx="35" cy="35" r="28" stroke="#5c8fe0" stroke-width="5"
+                  stroke-dasharray="175.9" stroke-dashoffset="108.8"/>
+              </svg>
+              <div class="ring-label">
+                <span class="ring-value" style="font-size:1.2rem;color:var(--blue)">38%</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.78rem;color:var(--cream);">Ch.2 in progress</div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem;">Ch.1 complete</div>
+              <div class="stat-change">↑ +12% this month</div>
+            </div>
+          </div>
+        </div>
+        <!-- Streak ring -->
+        <div class="stat-card">
+          <div class="stat-label">Writing Streak</div>
+          <div class="stat-visual">
+            <div class="ring-wrap">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle class="ring-track" cx="35" cy="35" r="28" stroke-width="5"/>
+                <circle class="ring-fill" cx="35" cy="35" r="28" stroke="#4caf7d" stroke-width="5"
+                  stroke-dasharray="175.9" stroke-dashoffset="70.4"/>
+              </svg>
+              <div class="ring-label">
+                <span class="ring-value" style="font-size:1.4rem;color:var(--green)">6</span>
+                <span class="ring-unit">days</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.78rem;color:var(--cream);">Personal best</div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem;">Goal: 7 days</div>
+              <div class="stat-change">↑ Streak record</div>
+            </div>
+          </div>
+        </div>
+        <!-- Milestones ring -->
+        <div class="stat-card">
+          <div class="stat-label">Milestones Done</div>
+          <div class="stat-visual">
+            <div class="ring-wrap">
+              <svg width="70" height="70" viewBox="0 0 70 70">
+                <circle class="ring-track" cx="35" cy="35" r="28" stroke-width="5"/>
+                <circle class="ring-fill" cx="35" cy="35" r="28" stroke="#e8c87a" stroke-width="5"
+                  stroke-dasharray="175.9" stroke-dashoffset="72.9"/>
+              </svg>
+              <div class="ring-label">
+                <span class="ring-value" style="font-size:1.2rem;color:var(--gold-light)">7</span>
+                <span class="ring-unit">/ 12</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:0.78rem;color:var(--cream);">3 ahead of pace</div>
+              <div style="font-size:0.7rem;color:var(--muted);margin-top:0.2rem;">Phase 1</div>
+              <div class="stat-change">↑ On track</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Phase Journey Map + CV Spider Chart -->
+      <div class="two-col">
+        <!-- Phase Journey Map -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Research Phase Journey</div>
+            <div class="card-action">View roadmap →</div>
+          </div>
+          <div class="card-body">
+            <div class="phase-journey">
+              <div class="phase-node">
+                <div class="phase-circle active">1</div>
+                <div class="phase-node-label active-label">Foundation</div>
+              </div>
+              <div class="phase-connector"></div>
+              <div class="phase-node">
+                <div class="phase-circle">2</div>
+                <div class="phase-node-label">Cross-Pollination</div>
+              </div>
+              <div class="phase-connector"></div>
+              <div class="phase-node">
+                <div class="phase-circle">3</div>
+                <div class="phase-node-label">Launch</div>
+              </div>
+            </div>
+            <div style="margin-top:1.5rem;padding:1rem;background:var(--deep);border:1px solid var(--border);border-left:3px solid var(--gold);">
+              <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.5rem;">Phase 1 · Current Focus</div>
+              <div style="font-size:0.82rem;color:var(--text);line-height:1.7;">Lock in research parameters · Build systematic review structure · Establish writing rhythm</div>
+            </div>
+            <div style="margin-top:1rem;">
+              <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--muted);margin-bottom:0.4rem;"><span>Phase 1 Progress</span><span>38%</span></div>
+              <div style="height:6px;background:var(--border2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:38%;background:var(--gold);border-radius:3px;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CV Spider Chart -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">CV Competitiveness Index</div>
+            <div class="card-action">Full breakdown →</div>
+          </div>
+          <div class="card-body">
+            <div class="spider-wrap">
+              <svg width="220" height="200" viewBox="0 0 220 200">
+                <!-- Background rings -->
+                <polygon points="110,20 185,60 185,140 110,180 35,140 35,60" fill="none" stroke="#222" stroke-width="1"/>
+                <polygon points="110,42 168,72 168,128 110,158 52,128 52,72" fill="none" stroke="#222" stroke-width="1"/>
+                <polygon points="110,64 151,84 151,116 110,136 69,116 69,84" fill="none" stroke="#222" stroke-width="1"/>
+                <polygon points="110,86 134,96 134,104 110,114 86,104 86,96" fill="none" stroke="#1a1a1a" stroke-width="1"/>
+                <!-- Axis lines -->
+                <line x1="110" y1="20" x2="110" y2="180" stroke="#2a2a2a" stroke-width="1"/>
+                <line x1="185" y1="60" x2="35" y2="140" stroke="#2a2a2a" stroke-width="1"/>
+                <line x1="185" y1="140" x2="35" y2="60" stroke="#2a2a2a" stroke-width="1"/>
+                <!-- Data polygon: Publications=10%, Thesis=38%, Conferences=5%, Collaborations=40%, Grants=0%, Writing=75% -->
+                <polygon points="110,164 122,119 182,137 111,176 37,132 64,68"
+                  fill="rgba(201,168,76,0.15)" stroke="#c9a84c" stroke-width="1.5"/>
+                <!-- Axis labels -->
+                <text x="110" y="14" text-anchor="middle" fill="#777" font-family="DM Mono" font-size="8">Writing 75%</text>
+                <text x="194" y="58" text-anchor="start" fill="#777" font-family="DM Mono" font-size="8">Thesis 38%</text>
+                <text x="194" y="148" text-anchor="start" fill="#777" font-family="DM Mono" font-size="8">Collabs 40%</text>
+                <text x="110" y="192" text-anchor="middle" fill="#777" font-family="DM Mono" font-size="8">Grants 0%</text>
+                <text x="26" y="148" text-anchor="end" fill="#777" font-family="DM Mono" font-size="8">Conf 5%</text>
+                <text x="26" y="58" text-anchor="end" fill="#777" font-family="DM Mono" font-size="8">Pubs 10%</text>
+                <!-- Score centre -->
+                <text x="110" y="98" text-anchor="middle" fill="#c9a84c" font-family="Playfair Display" font-size="18" font-weight="700">34</text>
+                <text x="110" y="110" text-anchor="middle" fill="#555" font-family="DM Mono" font-size="7">/ 100</text>
+              </svg>
+              <div style="font-size:0.75rem;color:var(--muted);text-align:center;line-height:1.7;">
+                Strong on Writing & Collaboration. Publications and Grants need attention in Phase 2.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Weekly Accountability Map + Milestones -->
+      <div class="two-col">
+
+        <!-- Weekly Accountability Map -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Weekly Accountability Map</div>
+            <div class="card-action">How it works →</div>
+          </div>
+          <div class="card-body">
+            <div class="wam-header">
+              <div style="font-size:0.82rem;color:var(--text);line-height:1.6;">Every week you're paired with a <strong style="color:var(--cream)">different cohort member</strong> — building your network across all 20 scholars progressively.</div>
+              <div class="wam-week-badge">Week 2</div>
+            </div>
+
+            <!-- Network visualisation -->
+            <div class="wam-network">
+              <svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                <!-- Connection lines to past partners -->
+                <line x1="200" y1="110" x2="80" y2="50" stroke="rgba(76,175,125,0.4)" stroke-width="1.5" stroke-dasharray="4,3"/>
+                <!-- Connection to current partner (solid gold) -->
+                <line x1="200" y1="110" x2="320" y2="50" stroke="#c9a84c" stroke-width="2"/>
+                <!-- Future/unconnected (very dim) -->
+                <line x1="200" y1="110" x2="60" y2="170" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="200" y1="110" x2="340" y2="170" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="200" y1="110" x2="150" y2="190" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="200" y1="110" x2="260" y2="190" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="200" y1="110" x2="110" y2="30" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <line x1="200" y1="110" x2="290" y2="30" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+
+                <!-- YOU - centre node -->
+                <circle cx="200" cy="110" r="22" fill="#0e0e0e" stroke="#c9a84c" stroke-width="2"/>
+                <circle cx="200" cy="110" r="22" fill="rgba(201,168,76,0.08)"/>
+                <text x="200" y="114" text-anchor="middle" fill="#c9a84c" font-family="Playfair Display" font-size="13" font-weight="700">A</text>
+
+                <!-- Week 1 partner - connected (green) -->
+                <circle cx="80" cy="50" r="16" fill="#0e0e0e" stroke="#4caf7d" stroke-width="1.5"/>
+                <text x="80" y="54" text-anchor="middle" fill="#4caf7d" font-family="Playfair Display" font-size="11" font-weight="700">E</text>
+                <text x="80" y="72" text-anchor="middle" fill="#4caf7d" font-family="DM Mono" font-size="7">Wk1 ✓</text>
+
+                <!-- Current week partner (gold, pulsing) -->
+                <circle cx="320" cy="50" r="18" fill="#0e0e0e" stroke="#c9a84c" stroke-width="2"/>
+                <circle cx="320" cy="50" r="18" fill="rgba(201,168,76,0.1)"/>
+                <text x="320" y="54" text-anchor="middle" fill="#c9a84c" font-family="Playfair Display" font-size="12" font-weight="700">K</text>
+                <text x="320" y="72" text-anchor="middle" fill="#c9a84c" font-family="DM Mono" font-size="7">This week</text>
+
+                <!-- Future nodes (dim) -->
+                <circle cx="60" cy="170" r="13" fill="#0e0e0e" stroke="#2a2a2a" stroke-width="1"/>
+                <text x="60" y="174" text-anchor="middle" fill="#444" font-family="Playfair Display" font-size="10" font-weight="700">A</text>
+
+                <circle cx="340" cy="170" r="13" fill="#0e0e0e" stroke="#2a2a2a" stroke-width="1"/>
+                <text x="340" y="174" text-anchor="middle" fill="#444" font-family="Playfair Display" font-size="10" font-weight="700">S</text>
+
+                <circle cx="150" cy="190" r="13" fill="#0e0e0e" stroke="#2a2a2a" stroke-width="1"/>
+                <text x="150" y="194" text-anchor="middle" fill="#444" font-family="Playfair Display" font-size="10" font-weight="700">O</text>
+
+                <circle cx="260" cy="190" r="13" fill="#0e0e0e" stroke="#2a2a2a" stroke-width="1"/>
+                <text x="260" y="194" text-anchor="middle" fill="#444" font-family="Playfair Display" font-size="10" font-weight="700">N</text>
+
+                <circle cx="110" cy="30" r="11" fill="#0e0e0e" stroke="#2a2a2a" stroke-width="1"/>
+                <text x="110" y="34" text-anchor="middle" fill="#444" font-family="Playfair Display" font-size="9" font-weight="700">K</text>
+
+                <circle cx="290" cy="30" r="11" fill="#0e0e0e" stroke="#2a2a2a" stroke-width="1"/>
+                <text x="290" y="34" text-anchor="middle" fill="#444" font-family="Playfair Display" font-size="9" font-weight="700">Y</text>
+              </svg>
+            </div>
+
+            <!-- Current partner -->
+            <div class="wam-current-partner">
+              <div class="wam-partner-avatar">K</div>
+              <div class="wam-partner-info">
+                <div class="wam-partner-name">Kwame Asante</div>
+                <div class="wam-partner-dept">PhD · Computer Science</div>
+                <div class="wam-partner-why">Matched: You need computational modeling · Kwame needs domain application context</div>
+              </div>
+              <div class="wam-partner-status">Active now</div>
+            </div>
+
+            <!-- Past partners -->
+            <div class="wam-history">
+              <div class="wam-history-label">Previous Partners</div>
+              <div class="wam-history-row">
+                <div class="wam-past-chip">
+                  <div class="wam-chip-avatar" style="background:linear-gradient(135deg,#4caf7d,#267a52);">E</div>
+                  Efia · Wk1 · Civil Eng
+                </div>
+                <div class="wam-past-chip" style="opacity:0.4;border-style:dashed;">
+                  <div class="wam-chip-avatar" style="background:var(--border2);">?</div>
+                  Wk3 · TBA Monday
+                </div>
+              </div>
+            </div>
+
+            <button class="wam-nudge-btn" onclick="this.textContent='✓ Nudge sent to Kwame';this.style.borderColor='var(--green)';this.style.color='var(--green)';this.disabled=true;">
+              ⚡ Send Weekly Check-in to Kwame
+            </button>
+          </div>
+        </div>
+
+        <!-- Milestones -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">This Week's Milestones</div>
+            <div class="card-action">+ Add milestone</div>
+          </div>
+          <div class="card-body">
+            <div class="milestone-list">
+              <div class="milestone-item done" onclick="toggleMilestone(this)">
+                <div class="milestone-check">✓</div>
+                <div>
+                  <div class="milestone-title">Complete literature review gap analysis</div>
+                  <div class="milestone-meta"><span class="milestone-tag writing">Writing</span><span class="milestone-due">Done Mon</span></div>
+                </div>
+              </div>
+              <div class="milestone-item done" onclick="toggleMilestone(this)">
+                <div class="milestone-check">✓</div>
+                <div>
+                  <div class="milestone-title">Set up Zotero library with 40 core papers</div>
+                  <div class="milestone-meta"><span class="milestone-tag research">Research</span><span class="milestone-due">Done Tue</span></div>
+                </div>
+              </div>
+              <div class="milestone-item" onclick="toggleMilestone(this)">
+                <div class="milestone-check"></div>
+                <div>
+                  <div class="milestone-title">Draft methodology chapter outline (500 words)</div>
+                  <div class="milestone-meta"><span class="milestone-tag writing">Writing</span><span class="milestone-due urgent">Due today</span></div>
+                </div>
+              </div>
+              <div class="milestone-item" onclick="toggleMilestone(this)">
+                <div class="milestone-check"></div>
+                <div>
+                  <div class="milestone-title">Book supervisor meeting — send pre-meeting agenda</div>
+                  <div class="milestone-meta"><span class="milestone-tag admin">Admin</span><span class="milestone-due">Due Fri</span></div>
+                </div>
+              </div>
+              <div class="milestone-item" onclick="toggleMilestone(this)">
+                <div class="milestone-check"></div>
+                <div>
+                  <div class="milestone-title">Attend virtual seminar: Systematic Review Methods</div>
+                  <div class="milestone-meta"><span class="milestone-tag research">Research</span><span class="milestone-due">Due Sat</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 4: Writing Sprint + Advisor CRM + Micro-Drafting -->
+      <div class="three-col">
+        <!-- Writing Sprint -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Writing Sprint</div><div class="card-action">Schedule →</div></div>
+          <div class="card-body">
+            <div class="sprint-timer">
+              <div class="sprint-time" id="sprintTime">50:00</div>
+              <div class="sprint-label" id="sprintLabel">Deep Work · Session 1</div>
+            </div>
+            <div class="sprint-sessions" style="margin:0.8rem 0;">
+              <div class="session-dot active"></div><div class="session-dot"></div><div class="session-dot"></div><div class="session-dot"></div>
+            </div>
+            <div style="font-size:0.75rem;color:var(--muted);line-height:1.6;margin-bottom:1rem;">50 min deep draft → 10 min break → 50 min push. <strong style="color:var(--gold)">2 scholars live now.</strong></div>
+            <div class="sprint-controls">
+              <button class="sprint-btn primary" onclick="toggleSprint(this)">▶ Start Sprint</button>
+              <button class="sprint-btn" onclick="alert('Opening Co-Working Room...')">Join Room</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advisor CRM -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Advisor CRM</div><div class="card-action">+ Log meeting</div></div>
+          <div class="card-body">
+            <div class="advisor-item">
+              <div class="advisor-avatar-sm">P</div>
+              <div style="flex:1;">
+                <div class="advisor-item-name">Prof. Mensah</div>
+                <div class="advisor-item-role">Primary Supervisor</div>
+                <div class="advisor-item-last">Last met: 8 days ago · Next: Thu 29 May</div>
+              </div>
+              <button class="meeting-btn">Agenda →</button>
+            </div>
+            <div class="advisor-item">
+              <div class="advisor-avatar-sm" style="background:linear-gradient(135deg,#c9a84c,#8a6e2f);">O</div>
+              <div style="flex:1;">
+                <div class="advisor-item-name">Dr. Owusu</div>
+                <div class="advisor-item-role">Co-Supervisor</div>
+                <div class="advisor-item-last">Last met: 21 days ago</div>
+                <div class="advisor-conflict">⚠ Conflicting feedback — resolve before joint meeting</div>
+              </div>
+              <button class="meeting-btn">Resolve →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Micro-Drafting -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Micro-Drafting Workspace</div><div class="card-action">Open editor →</div></div>
+          <div class="card-body">
+            <div class="draft-phase-tag">Chapter 2 · Literature Review</div>
+            <div class="draft-sections">
+              <div class="draft-section done">
+                <div class="draft-check">✓</div>
+                <div class="draft-section-info">
+                  <div class="draft-section-name">2.1 — Background & Context</div>
+                  <div class="draft-section-words">412 words · Complete</div>
+                </div>
+              </div>
+              <div class="draft-section active">
+                <div class="draft-active-dot"></div>
+                <div class="draft-section-info">
+                  <div class="draft-section-name">2.2 — Research Gap Analysis</div>
+                  <div class="draft-section-words">218 / 500 words</div>
+                  <div class="draft-word-bar"><div class="draft-word-fill" style="width:44%"></div></div>
+                </div>
+              </div>
+              <div class="draft-section">
+                <div class="draft-check"></div>
+                <div class="draft-section-info">
+                  <div class="draft-section-name">2.3 — Theoretical Framework</div>
+                  <div class="draft-section-words">Not started</div>
+                </div>
+              </div>
+            </div>
+            <div class="draft-prompt">
+              <div class="draft-prompt-label">Today's Writing Prompt</div>
+              <div class="draft-prompt-text">State the gap your research fills in 2–3 sentences. Name the gap specifically — not just the topic.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 5: Publications Kanban + Opportunity Radar -->
+      <div class="two-col full-width">
+        <!-- Publications Kanban -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Publications Pipeline</div><div class="card-action">+ Add paper</div></div>
+          <div class="card-body" style="padding:0;">
+            <div class="kanban-board">
+              <div class="kanban-col">
+                <div class="kanban-col-header">Draft <span class="kanban-col-count">1</span></div>
+                <div class="kanban-card">
+                  <div class="kanban-card-title">Green Synthesis of ZnO Nanoparticles: A Systematic Review</div>
+                  <div class="kanban-card-meta">Target: Journal of Nanomaterials</div>
+                  <div class="kanban-card-bar"><div class="kanban-card-fill" style="width:35%"></div></div>
+                  <div style="font-family:'DM Mono',monospace;font-size:0.55rem;color:var(--muted);margin-top:0.4rem;">35% complete</div>
+                </div>
+                <button class="kanban-add">+ Add paper</button>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-header">In Review <span class="kanban-col-count">0</span></div>
+                <div style="font-size:0.72rem;color:var(--muted);font-style:italic;text-align:center;padding:1rem 0;">No papers in review yet</div>
+                <button class="kanban-add">+ Add paper</button>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-header">Revising <span class="kanban-col-count">0</span></div>
+                <div style="font-size:0.72rem;color:var(--muted);font-style:italic;text-align:center;padding:1rem 0;">—</div>
+                <button class="kanban-add">+ Add paper</button>
+              </div>
+              <div class="kanban-col">
+                <div class="kanban-col-header">Published <span class="kanban-col-count">0</span></div>
+                <div style="font-size:0.72rem;color:var(--muted);font-style:italic;text-align:center;padding:1rem 0;">Your first awaits</div>
+                <button class="kanban-add">+ Add paper</button>
+              </div>
+            </div>
+            <div style="padding:1rem 1.5rem;font-size:0.75rem;color:var(--muted2);background:rgba(201,168,76,0.04);border-top:1px solid var(--border);">
+              💡 At 60% your lit review will be flagged as ready to convert into a standalone Systematic Review submission.
+            </div>
+          </div>
+        </div>
+
+        <!-- Opportunity Radar -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Opportunity Radar</div><div class="card-action">Update keywords →</div></div>
+          <div class="card-body">
+            <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--blue);margin-bottom:1rem;padding:0.4rem 0.8rem;background:rgba(92,143,224,0.08);border:1px solid rgba(92,143,224,0.2);display:inline-block;">2 new matches · Keywords: Biomedical Engineering, Nanocoatings</div>
+            <div class="opp-list">
+              <div class="opp-item urgent">
+                <div class="opp-type-badge conference">Conference</div>
+                <div class="opp-content">
+                  <div class="opp-title">African Materials Research Society — Abstract Submission</div>
+                  <div class="opp-meta"><span class="opp-deadline urgent">⚑ Deadline: 14 Jun 2026</span><span class="opp-match">98% match</span></div>
+                  <div class="opp-desc">Virtual + in-person · Accra · Phase 1 abstracts accepted</div>
+                </div>
+                <button class="opp-btn">Apply →</button>
+              </div>
+              <div class="opp-item">
+                <div class="opp-type-badge fellowship">Fellowship</div>
+                <div class="opp-content">
+                  <div class="opp-title">DAAD Research Stay — Germany (3–5 months)</div>
+                  <div class="opp-meta"><span class="opp-deadline">Deadline: 31 Jul 2026</span><span class="opp-match">85% match</span></div>
+                  <div class="opp-desc">Fully funded · Advanced nanomaterial characterization labs</div>
+                </div>
+                <button class="opp-btn">Save →</button>
+              </div>
+              <div class="opp-item">
+                <div class="opp-type-badge grant">Grant</div>
+                <div class="opp-content">
+                  <div class="opp-title">UG Internal Research Grant — Equipment Fund</div>
+                  <div class="opp-meta"><span class="opp-deadline urgent">⚑ Deadline: 30 Jun 2026</span><span class="opp-match">91% match</span></div>
+                  <div class="opp-desc">Up to GHS 5,000 · Advisor endorsement required</div>
+                </div>
+                <button class="opp-btn">Apply →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 6: Cohort Heatmap + Resource Feed -->
+      <div class="two-col full-width">
+        <!-- Cohort Heatmap -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Cohort Activity Board · 14 of 20 Active Today</div><div class="card-action">View all →</div></div>
+          <div class="card-body">
+            <div class="heatmap-grid">
+              <div class="heatmap-member you"><div class="hm-avatar" style="background:linear-gradient(135deg,var(--gold),#8a6e2f);">A</div><div class="hm-name">You</div><div class="hm-dots"><div class="hm-dot d5"></div><div class="hm-dot d5"></div><div class="hm-dot d5"></div><div class="hm-dot d4"></div><div class="hm-dot d4"></div><div class="hm-dot d4"></div><div class="hm-dot d5"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#5c8fe0,#2d5aa8);">K</div><div class="hm-name">Kwame</div><div class="hm-dots"><div class="hm-dot d4"></div><div class="hm-dot d3"></div><div class="hm-dot d4"></div><div class="hm-dot d4"></div><div class="hm-dot d2"></div><div class="hm-dot d3"></div><div class="hm-dot d4"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#4caf7d,#267a52);">A</div><div class="hm-name">Ama</div><div class="hm-dots"><div class="hm-dot d5"></div><div class="hm-dot d5"></div><div class="hm-dot d4"></div><div class="hm-dot d5"></div><div class="hm-dot d5"></div><div class="hm-dot d4"></div><div class="hm-dot d5"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#e05c5c,#a83030);">E</div><div class="hm-name">Efia</div><div class="hm-dots"><div class="hm-dot d3"></div><div class="hm-dot d2"></div><div class="hm-dot d3"></div><div class="hm-dot d4"></div><div class="hm-dot d3"></div><div class="hm-dot d1"></div><div class="hm-dot d3"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#c9a84c,#6b5520);">K</div><div class="hm-name">Kofi</div><div class="hm-dots"><div class="hm-dot d4"></div><div class="hm-dot d4"></div><div class="hm-dot d3"></div><div class="hm-dot d5"></div><div class="hm-dot d4"></div><div class="hm-dot d4"></div><div class="hm-dot d3"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#9c6ee0,#5a2da8);">S</div><div class="hm-name">Sena</div><div class="hm-dots"><div class="hm-dot d2"></div><div class="hm-dot d3"></div><div class="hm-dot d2"></div><div class="hm-dot d1"></div><div class="hm-dot d2"></div><div class="hm-dot d2"></div><div class="hm-dot d3"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#e09c5c,#a85020);">O</div><div class="hm-name">Ofori</div><div class="hm-dots"><div class="hm-dot d3"></div><div class="hm-dot d4"></div><div class="hm-dot d4"></div><div class="hm-dot d3"></div><div class="hm-dot d4"></div><div class="hm-dot d3"></div><div class="hm-dot d4"></div></div></div>
+              <div class="heatmap-member"><div class="hm-avatar" style="background:linear-gradient(135deg,#5ce0c9,#20a88a);">A</div><div class="hm-name">Abena</div><div class="hm-dots"><div class="hm-dot d5"></div><div class="hm-dot d4"></div><div class="hm-dot d5"></div><div class="hm-dot d5"></div><div class="hm-dot d4"></div><div class="hm-dot d5"></div><div class="hm-dot d5"></div></div></div>
+              <div class="heatmap-member inactive"><div class="hm-avatar" style="background:var(--muted);">Y</div><div class="hm-name">Yaw</div><div class="hm-dots"><div class="hm-dot d1"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div></div></div>
+              <div class="heatmap-member inactive"><div class="hm-avatar" style="background:var(--muted);">N</div><div class="hm-name">Nana</div><div class="hm-dots"><div class="hm-dot d1"></div><div class="hm-dot d1"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div><div class="hm-dot"></div></div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-top:1rem;font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--muted);">
+              <span>Activity:</span>
+              <div style="display:flex;gap:3px;align-items:center;">
+                <div style="width:10px;height:10px;border-radius:2px;background:var(--border2);"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.3);"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.5);"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:rgba(201,168,76,0.7);"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:var(--gold);"></div>
+                <div style="width:10px;height:10px;border-radius:2px;background:var(--gold-light);"></div>
+              </div>
+              <span>None → High · 7-day window</span>
+              <span style="margin-left:auto;color:var(--red);">2 members flagged to partners</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resource Feed -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Phase-Matched Resources</div><div class="card-action">View all →</div></div>
+          <div class="card-body">
+            <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;padding:0.4rem 0.8rem;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);display:inline-block;">Phase 1 Mode · Literature Review & Foundation</div>
+            <div class="feed-list">
+              <div class="feed-item">
+                <div class="feed-thumb">▶</div>
+                <div>
+                  <div class="feed-title">How to write a Systematic Review that becomes a publication (Belcher method)</div>
+                  <div class="feed-meta"><span class="feed-type video">Video</span><span class="feed-duration">18 min</span></div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="feed-thumb">📄</div>
+                <div>
+                  <div class="feed-title">Structuring your research gap argument in 3 moves — a practical guide</div>
+                  <div class="feed-meta"><span class="feed-type read">Read</span><span class="feed-duration">6 min</span></div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="feed-thumb">🧠</div>
+                <div>
+                  <div class="feed-title">Managing the third-year slump before it arrives — energy audit for Phase 1 scholars</div>
+                  <div class="feed-meta"><span class="feed-type mental">Wellbeing</span><span class="feed-duration">4 min</span></div>
+                </div>
+              </div>
+              <div class="feed-item">
+                <div class="feed-thumb">😂</div>
+                <div>
+                  <div class="feed-title">When your supervisor says "interesting" and means "start over"</div>
+                  <div class="feed-meta"><span class="feed-type" style="border-color:rgba(156,110,224,0.3);color:var(--purple);">Meme</span><span class="feed-duration">30 sec</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  // Sprint timer
+  let sprintRunning=false, sprintSeconds=50*60, sprintInterval;
+  function toggleSprint(btn){
+    if(!sprintRunning){
+      sprintRunning=true; btn.textContent='⏸ Pause Sprint';
+      btn.style.background='transparent'; btn.style.borderColor='var(--gold)'; btn.style.color='var(--gold)';
+      sprintInterval=setInterval(()=>{
+        sprintSeconds--;
+        if(sprintSeconds<=0){ clearInterval(sprintInterval); sprintRunning=false; btn.textContent='▶ Start Next'; btn.style.background=''; btn.style.borderColor=''; btn.style.color=''; document.getElementById('sprintLabel').textContent='Sprint Complete ✦'; return; }
+        const m=Math.floor(sprintSeconds/60), s=sprintSeconds%60;
+        document.getElementById('sprintTime').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+      },1000);
+    } else {
+      clearInterval(sprintInterval); sprintRunning=false; btn.textContent='▶ Resume Sprint';
+      btn.style.background='var(--gold)'; btn.style.borderColor='var(--gold)'; btn.style.color='var(--black)';
+    }
+  }
+  function toggleMilestone(item){
+    item.classList.toggle('done');
+    item.querySelector('.milestone-check').textContent=item.classList.contains('done')?'✓':'';
+  }
+  document.getElementById('topbarDate').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+</script>
+
+  <!-- DEMO NAV BAR -->
+  <div id="demoNav" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:500;background:rgba(8,8,8,0.95);border:1px solid #c9a84c;backdrop-filter:blur(12px);padding:0.6rem 1rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;justify-content:center;max-width:95vw;">
+    <span style="font-family:'DM Mono',monospace;font-size:0.5rem;letter-spacing:0.15em;text-transform:uppercase;color:#c9a84c;margin-right:0.3rem;">Demo</span>
+    <a href="index.html" class="dnav-link">Home</a>
+    <a href="academic-engine-landing.html" class="dnav-link">Landing</a>
+    <a href="academic-engine-onboarding.html" class="dnav-link">Onboarding</a>
+    <a href="academic-engine-dashboard.html" class="dnav-link">Dashboard</a>
+    <a href="academic-engine-milestones.html" class="dnav-link">Milestones</a>
+    <a href="academic-engine-sprint.html" class="dnav-link">Sprint Room</a>
+    <a href="academic-engine-cv-index.html" class="dnav-link">CV Index</a>
+    <button onclick="document.getElementById('demoNav').style.display='none'" style="font-family:'DM Mono',monospace;font-size:0.5rem;color:#555;background:none;border:none;cursor:pointer;padding:0.3rem 0.5rem;margin-left:0.2rem;">✕</button>
+  </div>
+  <style>
+    .dnav-link { font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;color:#777;text-decoration:none;padding:0.3rem 0.6rem;border:1px solid #222;transition:all 0.15s; }
+    .dnav-link:hover { border-color:#c9a84c;color:#c9a84c; }
+  </style>
+
+</body>
+</html>
